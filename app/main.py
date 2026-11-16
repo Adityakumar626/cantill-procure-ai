@@ -151,7 +151,21 @@ async def process_batch(file: Optional[UploadFile] = File(None)):
                 "suggested_suppliers": r.suggested_supplier_ids,
                 "po_id": r.po_id,
                 "reason": r.reason,
-                "lines_count": len(r.lines)
+                "lines_count": len(r.lines),
+                "lines": [
+                    {
+                        "pr_no": line.pr_no,
+                        "pr_line": line.pr_line,
+                        "requester": line.requester,
+                        "department": line.department,
+                        "quantity": line.quantity,
+                        "uom": line.uom,
+                        "created_at": line.created_at.strftime("%Y-%m-%d %H:%M"),
+                        "need_by_date": line.need_by_date.strftime("%Y-%m-%d"),
+                        "urgency": line.urgency,
+                    }
+                    for line in r.lines
+                ]
             }
             for r in reqs
         ],

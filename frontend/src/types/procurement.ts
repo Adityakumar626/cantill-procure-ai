@@ -9,6 +9,18 @@ export type ProcurementRoute =
   | 'CAPEX_SOURCING'
   | 'NEW_ITEM_SOURCING';
 
+export interface ConstituentPRLine {
+  pr_no: string;
+  pr_line: number;
+  requester: string;
+  department: string;
+  quantity: number;
+  uom: string;
+  created_at: string;
+  need_by_date: string;
+  urgency: string;
+}
+
 export interface Requirement {
   group_id: string;
   resolved_item_code: string;
@@ -24,6 +36,7 @@ export interface Requirement {
   po_id?: string | null;
   reason: string;
   lines_count: number;
+  lines?: ConstituentPRLine[];
 }
 
 export interface SummaryKPIs {
@@ -48,11 +61,15 @@ export interface ContractInfo {
 }
 
 export interface PreferredSupplierRank {
-  rank: number;
   supplier_id: string;
-  supplier_name: string;
-  score: number;
+  name: string;
+  pos_548d: number;
+  recency: number;
+  has_contract: boolean;
   reference_price?: number | null;
+  on_time_pct: number;
+  quality_rating: number;
+  score: number;
 }
 
 export interface ChatMessage {
@@ -71,4 +88,11 @@ export interface ChatMessage {
     estimated_unit_price?: number;
     ready_to_submit?: boolean;
   } | null;
+}
+
+export interface ToastMessage {
+  id: string;
+  type: 'success' | 'error' | 'info';
+  title: string;
+  message: string;
 }
