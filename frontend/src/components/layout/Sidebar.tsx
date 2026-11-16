@@ -33,12 +33,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse,
 }) => {
   const menuItems = [
-    { id: 'buyer-workspace' as TabType, label: 'Buyer Workspace', icon: ClipboardList, badge: '151' },
-    { id: 'chat-intake' as TabType, label: 'Chat Intake', icon: MessageSquare, badge: 'AI' },
-    { id: 'policy-manager' as TabType, label: 'Policy as Data', icon: Sliders },
-    { id: 'preferred-suppliers' as TabType, label: 'Preferred Suppliers', icon: Award },
-    { id: 'contracts' as TabType, label: 'Rate Contracts', icon: FileText, badge: '12' },
-    { id: 'batch-upload' as TabType, label: 'Batch Studio', icon: UploadCloud },
+    { id: 'buyer-workspace' as TabType, path: '/workspace', label: 'Buyer Workspace', icon: ClipboardList, badge: '151' },
+    { id: 'chat-intake' as TabType, path: '/chat', label: 'Chat Intake', icon: MessageSquare, badge: 'AI' },
+    { id: 'policy-manager' as TabType, path: '/policy', label: 'Policy Studio', icon: Sliders },
+    { id: 'preferred-suppliers' as TabType, path: '/suppliers', label: 'Preferred Suppliers', icon: Award },
+    { id: 'contracts' as TabType, path: '/contracts', label: 'Rate Contracts', icon: FileText, badge: '12' },
+    { id: 'batch-upload' as TabType, path: '/batch', label: 'Batch Studio', icon: UploadCloud },
   ];
 
   return (
@@ -70,9 +70,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
-              <button
+              <a
                 key={item.id}
-                onClick={() => onSelectTab(item.id)}
+                href={item.path}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onSelectTab(item.id);
+                }}
                 className={`flex items-center gap-3 px-3 py-2 rounded-[4px] text-xs font-medium transition-colors group relative ${
                   isActive
                     ? 'bg-[#263D57] text-white font-semibold shadow-inner'
@@ -95,7 +99,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {item.badge}
                   </span>
                 )}
-              </button>
+              </a>
             );
           })}
         </nav>

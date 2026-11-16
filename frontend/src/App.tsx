@@ -11,8 +11,37 @@ import { ToastContainer } from './components/common/Toast';
 import { QuickSearchModal } from './components/common/QuickSearchModal';
 import { Requirement, SummaryKPIs, ProcurementRoute, ToastMessage } from './types/procurement';
 
+export const tabToPath: Record<TabType, string> = {
+  'buyer-workspace': '/workspace',
+  'chat-intake': '/chat',
+  'policy-manager': '/policy',
+  'preferred-suppliers': '/suppliers',
+  'contracts': '/contracts',
+  'batch-upload': '/batch',
+};
+
+export const pathToTab = (pathname: string): TabType => {
+  const clean = pathname.replace(/\/+$/, '') || '/';
+  switch (clean) {
+    case '/chat':
+      return 'chat-intake';
+    case '/policy':
+      return 'policy-manager';
+    case '/suppliers':
+      return 'preferred-suppliers';
+    case '/contracts':
+      return 'contracts';
+    case '/batch':
+      return 'batch-upload';
+    case '/workspace':
+    case '/':
+    default:
+      return 'buyer-workspace';
+  }
+};
+
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('buyer-workspace');
+  const [activeTab, setActiveTabState] = useState<TabType>(() => pathToTab(window.location.pathname));
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [kpis, setKpis] = useState<SummaryKPIs | null>(null);
   const [activePolicy, setActivePolicy] = useState('v5.0');
@@ -22,6 +51,18 @@ export const App: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const navigateToTab = (tab: TabType, replace = false) => {
+    setActiveTabState(tab);
+    const targetPath = tabToPath[tab] || '/workspace';
+    if (window.location.pathname !== targetPath) {
+      if (replace) {
+        window.history.replaceState({ tab }, '', targetPath);
+      } else {
+        window.history.pushState({ tab }, '', targetPath);
+      }
+    }
+  };
 
   const addToast = (type: 'success' | 'error' | 'info', title: string, message: string) => {
     const id = Date.now().toString();
@@ -56,6 +97,12 @@ export const App: React.FC = () => {
   useEffect(() => {
     fetchBatchDecisions();
 
+    // Listen to browser Back / Forward history navigation
+    const handlePopState = () => {
+      setActiveTabState(pathToTab(window.location.pathname));
+    };
+    window.addEventListener('popstate', handlePopState);
+
     // Global Cmd+K keyboard shortcut
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -64,7 +111,11 @@ export const App: React.FC = () => {
       }
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
   }, []);
 
   const handleOverride = async (
@@ -119,11 +170,11 @@ export const App: React.FC = () => {
   const handlePolicyActivated = (newVersion: string) => {
     setActivePolicy(newVersion);
     fetchBatchDecisions();
-    setActiveTab('buyer-workspace');
+    navigateToTab('buyer-workspace');
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#090d16] text-slate-100 select-none">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#F5F6F8] text-[#202B38] select-none">
       {/* Top Navigation */}
       <Navbar
         activePolicy={activePolicy}
@@ -136,12 +187,12 @@ export const App: React.FC = () => {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           activeTab={activeTab}
-          onSelectTab={setActiveTab}
+          onSelectTab={navigateToTab}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
         />
 
-        <main className="flex-1 flex flex-col overflow-hidden bg-[#090d16]">
+        <main className="flex-1 flex flex-col overflow-hidden bg-[#F5F6F8]">
           {activeTab === 'buyer-workspace' && (
             <BuyerWorkspace
               requirements={requirements}
@@ -156,7 +207,7 @@ export const App: React.FC = () => {
             <ChatIntake
               onPRConfirmed={() => {
                 fetchBatchDecisions();
-                setActiveTab('buyer-workspace');
+                navigateToTab('buyer-workspace');
               }}
               onShowToast={addToast}
             />
@@ -182,7 +233,7 @@ export const App: React.FC = () => {
             <BatchUpload
               onBatchProcessed={() => {
                 fetchBatchDecisions();
-                setActiveTab('buyer-workspace');
+                navigateToTab('buyer-workspace');
               }}
               onShowToast={addToast}
             />
@@ -194,7 +245,7 @@ export const App: React.FC = () => {
       <QuickSearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
-        onSelectTab={setActiveTab}
+        onSelectTab={navigateToTab}
       />
 
       {/* Toast Notification Stack */}

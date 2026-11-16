@@ -54,13 +54,22 @@ if REACT_DIST.exists():
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-@app.get("/", response_class=HTMLResponse)
-async def serve_index():
+def get_spa_html() -> str:
     if (REACT_DIST / "index.html").exists():
         with open(REACT_DIST / "index.html", "r", encoding="utf-8") as f:
             return f.read()
     with open("app/static/index.html", "r", encoding="utf-8") as f:
         return f.read()
+
+@app.get("/", response_class=HTMLResponse)
+@app.get("/workspace", response_class=HTMLResponse)
+@app.get("/chat", response_class=HTMLResponse)
+@app.get("/policy", response_class=HTMLResponse)
+@app.get("/suppliers", response_class=HTMLResponse)
+@app.get("/contracts", response_class=HTMLResponse)
+@app.get("/batch", response_class=HTMLResponse)
+async def serve_spa_page():
+    return get_spa_html()
 
 @app.get("/health")
 async def health_check():
@@ -399,4 +408,12 @@ async def override_decision(
         "updated_rows": updated_count,
         "message": f"Successfully recorded override for requirement {group_id}."
     }
+
+# --- Fallback Catch-all SPA Handler for Direct URL Reloads ---
+
+@app.get("/{full_path:path}", response_class=HTMLResponse)
+async def catch_all_spa(full_path: str):
+    if full_path.startswith(("api", "assets", "static", "health")):
+        raise HTTPException(status_code=404, detail="Resource not found")
+    return get_spa_html()
 

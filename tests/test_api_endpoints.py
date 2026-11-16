@@ -123,3 +123,12 @@ def test_chat_intake_assistant():
     assert "ITM-1048" in data["assistant_reply"] or (data["draft_pr"] and data["draft_pr"]["resolved_item_code"] == "ITM-1048")
     assert data["draft_pr"]["plant"] == "CHK1"
     assert data["draft_pr"]["quantity"] == 200
+
+def test_spa_page_routes_and_reload_persistence():
+    """Verify that every dedicated page route returns 200 OK HTML for browser reloads."""
+    routes = ["/", "/workspace", "/chat", "/policy", "/suppliers", "/contracts", "/batch"]
+    for r in routes:
+        res = client.get(r)
+        assert res.status_code == 200
+        assert "html" in res.headers.get("content-type", "").lower()
+        assert "<div id=\"root\">" in res.text or "html" in res.text.lower()
