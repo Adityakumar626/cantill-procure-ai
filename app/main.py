@@ -2,6 +2,7 @@
 Cantill ProcureAI FastAPI Application Backend
 Provides REST endpoints for Batch Processing, Chat Intake, Policy-as-Data Versioning, and Exports.
 """
+import os
 import csv
 import io
 from pathlib import Path
@@ -12,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import SAMPLE_PR_BATCH_CSV, ACTIVE_POLICY_VERSION
+from app.config import SAMPLE_PR_BATCH_CSV, ACTIVE_POLICY_VERSION, GEMINI_API_KEY, GEMINI_MODEL
 from app.models.procurement import PRLine, OutputDecisionRow
 from app.models.policy import ProcurementPolicy, PolicyRule
 from app.engine.data_loader import MasterDataLoader, parse_datetime, parse_date
@@ -63,12 +64,14 @@ async def serve_index():
 
 @app.get("/health")
 async def health_check():
+    has_gemini = bool(os.environ.get("GEMINI_API_KEY") or GEMINI_API_KEY)
     return {
         "status": "online",
         "active_policy": state.policy_store.active_version,
         "items_count": len(state.loader.items),
         "contracts_count": len(state.loader.contracts),
         "suppliers_count": len(state.loader.suppliers),
+        "llm_mode": "gemini_2.0_flash" if has_gemini else "offline_deterministic"
     }
 
 # --- Batch Processing Endpoints ---
@@ -322,6 +325,7 @@ async def chat_intake(message: str = Form(...), session_id: str = Form("default_
         "reply": result.get("reply"),
         "assistant_reply": result.get("reply"),
         "status": result.get("status"),
+        "engine_mode": result.get("engine_mode", "offline_deterministic"),
         "session": session,
         "pr": result.get("pr"),
         "draft_pr": draft_pr

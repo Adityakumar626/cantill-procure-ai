@@ -31,3 +31,22 @@ SAMPLE_PR_BATCH_CSV = PR_BATCHES_DIR / "sample_pr_batch.csv"
 # Policy v5.0 Constants
 ACTIVE_POLICY_VERSION = "v5.0"
 POLICY_EFFECTIVE_DATE = "2026-04-01"
+
+# Environment Variables & LLM Settings
+def load_dotenv_file(env_file: Path):
+    """Load key-value pairs from .env without external dependencies."""
+    if env_file.exists():
+        with open(env_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    k = k.strip()
+                    v = v.strip().strip('"').strip("'")
+                    if k not in os.environ:
+                        os.environ[k] = v
+
+load_dotenv_file(BASE_DIR / ".env")
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")

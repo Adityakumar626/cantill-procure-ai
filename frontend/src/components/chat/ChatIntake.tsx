@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage } from '../../types/procurement';
-import { Send, Bot, User, Sparkles, CheckCircle, Clock, MapPin, Package } from 'lucide-react';
+import { Send, Bot, User, Sparkles, CheckCircle, Clock, MapPin, Package, Shield } from 'lucide-react';
 
 interface ChatIntakeProps {
   onPRConfirmed: () => void;
@@ -17,7 +17,17 @@ export const ChatIntake: React.FC<ChatIntakeProps> = ({ onPRConfirmed }) => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [engineMode, setEngineMode] = useState<string>('offline_deterministic');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch('/health')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.llm_mode) setEngineMode(data.llm_mode);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -48,6 +58,7 @@ export const ChatIntake: React.FC<ChatIntakeProps> = ({ onPRConfirmed }) => {
         body: formData,
       });
       const data = await res.json();
+      if (data.engine_mode) setEngineMode(data.engine_mode);
 
       const assistantMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -87,13 +98,29 @@ export const ChatIntake: React.FC<ChatIntakeProps> = ({ onPRConfirmed }) => {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden p-6 gap-4">
-      <div className="shrink-0">
-        <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-          Conversational Requisition Intake
-        </h1>
-        <p className="text-xs text-slate-400 mt-0.5">
-          Type your purchase requests naturally. The assistant matches master catalog items, resolves plants, and drafts compliant requisitions.
-        </p>
+      <div className="shrink-0 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            Conversational Requisition Intake
+          </h1>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Type your purchase requests naturally. The assistant matches master catalog items, resolves plants, and drafts compliant requisitions.
+          </p>
+        </div>
+
+        <div>
+          {engineMode === 'gemini_2.0_flash' ? (
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1.5 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+              <span>AI Engine: Gemini 2.0 Flash (Active)</span>
+            </span>
+          ) : (
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1.5 shadow-sm">
+              <Shield className="w-3.5 h-3.5 text-blue-400" />
+              <span>AI Engine: Offline Deterministic Safe</span>
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Chat Messages Viewport */}
