@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  procure-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cantill-procure-ai
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+    volumes:
+      # Mount data folder locally if data is present
+      - ./data:/app/data:ro
+      - ./submission:/app/submission:rw
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3

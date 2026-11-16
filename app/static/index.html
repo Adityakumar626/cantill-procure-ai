@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cantill ProcureAI — Corvo Engineering Procurement Intelligence</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-text">
+          <span class="brand-title">Cantill ProcureAI</span>
+          <span class="brand-subtitle">Corvo Engineering · Plants PUN1 (Bhosari) & CHK1 (Chakan)</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="badge badge-active" id="activePolicyBadge">Policy v5.0 Active</span>
+        <button class="btn btn-secondary" onclick="exportPreferredSuppliers()">Export Preferred Suppliers</button>
+        <button class="btn btn-primary" onclick="exportDecisionsCSV()">Export Decisions CSV</button>
+      </div>
+    </header>
+
+    <div class="main-body">
+      <!-- Left Navigation Sidebar -->
+      <aside class="sidebar">
+        <nav class="nav-menu">
+          <button class="nav-item active" onclick="switchTab('buyer-workspace')">
+            <span class="icon">📋</span> Buyer Workspace
+          </button>
+          <button class="nav-item" onclick="switchTab('chat-intake')">
+            <span class="icon">💬</span> Chat Intake
+          </button>
+          <button class="nav-item" onclick="switchTab('policy-manager')">
+            <span class="icon">📜</span> Policy as Data
+          </button>
+          <button class="nav-item" onclick="switchTab('preferred-suppliers')">
+            <span class="icon">🏆</span> Preferred Suppliers
+          </button>
+          <button class="nav-item" onclick="switchTab('contracts')">
+            <span class="icon">📑</span> Rate Contracts
+          </button>
+          <button class="nav-item" onclick="switchTab('batch-run')">
+            <span class="icon">📦</span> Batch Upload & Test
+          </button>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="engine-status">
+            <span class="status-dot"></span> Engine Online
+          </div>
+          <div class="version-label">v1.0.0 · Cantill Challenge</div>
+        </div>
+      </aside>
+
+      <!-- Main Workspace Area -->
+      <main class="content-area">
+
+        <!-- Tab 1: Buyer Decision Workspace -->
+        <section id="tab-buyer-workspace" class="tab-pane active">
+          <div class="page-header">
+            <div>
+              <h2>Buyer Decision Workspace</h2>
+              <p class="subtitle">Review clubbed requirements, evaluate automated decisions, and approve or override actions.</p>
+            </div>
+            <div class="header-controls">
+              <button class="btn btn-secondary" onclick="loadSampleBatch()">Reload Sample Batch (186 PRs)</button>
+            </div>
+          </div>
+
+          <!-- KPI Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Total PR Lines</span>
+              <span class="kpi-value" id="kpiTotalLines">186</span>
+              <span class="kpi-sub">Across 2 factory plants</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Clubbed Requirements</span>
+              <span class="kpi-value" id="kpiTotalReqs">151</span>
+              <span class="kpi-sub">Anti-split window: 14 days</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Automated POs</span>
+              <span class="kpi-value text-success" id="kpiDirectPOs">96</span>
+              <span class="kpi-sub">Contract, Emergency & Spot</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Sourcing Events</span>
+              <span class="kpi-value text-warning" id="kpiSourcingReqs">55</span>
+              <span class="kpi-sub">RFQ, RFP & Capex</span>
+            </div>
+          </div>
+
+          <!-- Decisions Table -->
+          <div class="table-container">
+            <table class="data-table" id="decisionsTable">
+              <thead>
+                <tr>
+                  <th>Req ID</th>
+                  <th>Item Code</th>
+                  <th>Plant</th>
+                  <th>Total Qty</th>
+                  <th>Value (INR)</th>
+                  <th>Decision & Route</th>
+                  <th>Awarded / Suggested Supplier</th>
+                  <th>Policy Reason & Clause</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="decisionsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Tab 2: Chat Intake -->
+        <section id="tab-chat-intake" class="tab-pane">
+          <div class="page-header">
+            <div>
+              <h2>Conversational PR Intake</h2>
+              <p class="subtitle">Type your purchase request naturally. The assistant resolves items, asks follow-ups, and drafts PRs.</p>
+            </div>
+          </div>
+
+          <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+              <div class="chat-bubble assistant">
+                Hello! I am your Corvo Procurement Assistant. What items do you need for your plant today?
+                <div class="chat-hint">Example: <em>"need 200 nitrile gloves for Chakan by next Friday"</em></div>
+              </div>
+            </div>
+            <div class="chat-input-bar">
+              <input type="text" id="chatInput" placeholder="Type your purchase requisition request..." onkeypress="handleChatKey(event)">
+              <button class="btn btn-primary" onclick="sendChatMessage()">Send</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 3: Policy as Data -->
+        <section id="tab-policy-manager" class="tab-pane">
+          <div class="page-header">
+            <div>
+              <h2>Policy as Data & Dynamic Amendment Engine</h2>
+              <p class="subtitle">Procurement rules are data, not code. Propose changes, preview plain-language diffs, and activate instantly.</p>
+            </div>
+          </div>
+
+          <div class="policy-grid">
+            <div class="card">
+              <h3>Active Policy Overview (<span id="policyVersionDisplay">v5.0</span>)</h3>
+              <div class="rule-list" id="activeRulesList">
+                <div class="rule-item"><strong>Rule 5.1:</strong> Capex items always route to <code>CAPEX_SOURCING</code> (Suggest 5 suppliers).</div>
+                <div class="rule-item"><strong>Rule 5.2:</strong> Rate Contract available with ceiling room $\rightarrow$ <code>CONTRACT_PO</code>.</div>
+                <div class="rule-item"><strong>Rule 5.3:</strong> Emergency $\le$ ₹5,00,000 with 365d history $\rightarrow$ <code>EMERGENCY_PO</code>.</div>
+                <div class="rule-item"><strong>Rule 5.4:</strong> Value &lt; ₹2,00,000 with 365d history $\rightarrow$ <code>SPOT_PO</code>.</div>
+                <div class="rule-item"><strong>Rule 5.5:</strong> Value &lt; ₹10,00,000 (or unproven item) $\rightarrow$ <code>RFQ</code> (Suggest 3).</div>
+                <div class="rule-item"><strong>Rule 5.6:</strong> Value $\ge$ ₹10,00,000 $\rightarrow$ <code>RFP</code> (Suggest 5).</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Propose Policy Amendment</h3>
+              <form id="amendmentForm" onsubmit="handleAmendPreview(event)">
+                <div class="form-group">
+                  <label>Spot PO Limit (INR)</label>
+                  <input type="number" id="amendSpotLimit" placeholder="e.g. 300000" value="300000">
+                </div>
+                <div class="form-group">
+                  <label>Emergency PO Limit (INR)</label>
+                  <input type="number" id="amendEmergencyLimit" placeholder="e.g. 750000" value="750000">
+                </div>
+                <div class="form-group">
+                  <label>RFQ Upper Threshold (INR)</label>
+                  <input type="number" id="amendRfqLimit" placeholder="e.g. 1500000" value="1500000">
+                </div>
+                <div class="form-group">
+                  <label>New Version Name</label>
+                  <input type="text" id="amendVersionName" value="v5.1">
+                </div>
+                <div class="form-group">
+                  <label>Effective Date</label>
+                  <input type="date" id="amendEffectiveDate" value="2026-11-19">
+                </div>
+                <button type="submit" class="btn btn-secondary">Preview Plain-Language Diff</button>
+              </form>
+
+              <!-- Diff Preview Card -->
+              <div id="diffPreviewBox" class="diff-box" style="display: none;">
+                <h4>Plain-Language Amendment Preview</h4>
+                <ul id="diffList"></ul>
+                <button class="btn btn-success" onclick="activateProposedPolicy()">Approve & Activate Amendment (No Code Change)</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 4: Preferred Suppliers -->
+        <section id="tab-preferred-suppliers" class="tab-pane">
+          <div class="page-header">
+            <div>
+              <h2>Preferred Supplier Rankings</h2>
+              <p class="subtitle">Dynamically ranked based on PO history in 548d, recency, contract status, on-time delivery %, and quality rating.</p>
+            </div>
+            <div class="header-controls">
+              <input type="date" id="supplierAsOfDate" value="2026-11-01" onchange="loadPreferredSuppliers()">
+              <button class="btn btn-primary" onclick="exportPreferredSuppliers()">Export CSV (Top 3)</button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Item Code</th>
+                  <th>Rank 1 Supplier</th>
+                  <th>Rank 2 Supplier</th>
+                  <th>Rank 3 Supplier</th>
+                </tr>
+              </thead>
+              <tbody id="preferredSuppliersBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Tab 5: Rate Contracts -->
+        <section id="tab-contracts" class="tab-pane">
+          <div class="page-header">
+            <div>
+              <h2>Active Rate Contracts & Ceiling Monitor</h2>
+              <p class="subtitle">Includes register contracts and automatically ingested PDF-only contracts signed after register update.</p>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Contract ID</th>
+                  <th>Supplier Name</th>
+                  <th>Start Date</th>
+                  <th>End Date</th>
+                  <th>Value Cap (INR)</th>
+                  <th>Consumed Value</th>
+                  <th>Remaining Ceiling</th>
+                  <th>Ceiling Status</th>
+                </tr>
+              </thead>
+              <tbody id="contractsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Tab 6: Batch Upload & Blind Test -->
+        <section id="tab-batch-run" class="tab-pane">
+          <div class="page-header">
+            <div>
+              <h2>Batch CSV Ingestion & Blind Test Runner</h2>
+              <p class="subtitle">Upload a batch CSV file to process PR lines through the active procurement engine.</p>
+            </div>
+          </div>
+
+          <div class="card" style="max-width: 600px;">
+            <h3>Upload PR Batch CSV</h3>
+            <p>Upload <code>sample_pr_batch.csv</code> or the blind test batch sent on Thursday morning.</p>
+            <input type="file" id="batchCsvInput" accept=".csv" style="margin: 16px 0;">
+            <div style="display: flex; gap: 12px;">
+              <button class="btn btn-primary" onclick="executeBatchUpload()">Process Batch</button>
+              <button class="btn btn-secondary" onclick="exportDecisionsCSV()">Download Output CSV</button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Override Modal -->
+  <div id="overrideModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <h3>Buyer Decision Override</h3>
+      <p id="modalReqLabel"></p>
+      <div class="form-group">
+        <label>New Route</label>
+        <select id="modalRouteSelect">
+          <option value="CONTRACT_PO">CONTRACT_PO</option>
+          <option value="SPOT_PO">SPOT_PO</option>
+          <option value="EMERGENCY_PO">EMERGENCY_PO</option>
+          <option value="RFQ">RFQ</option>
+          <option value="RFP">RFP</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Mandatory Audit Comment / Written Reason</label>
+        <textarea id="modalComment" placeholder="Explain why policy decision is being overridden..." rows="3"></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
+        <button class="btn btn-secondary" onclick="closeOverrideModal()">Cancel</button>
+        <button class="btn btn-danger" onclick="saveOverride()">Confirm Override</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
