@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Requirement, SummaryKPIs, ProcurementRoute, ConstituentPRLine } from '../../types/procurement';
+import { Requirement, SummaryKPIs, ProcurementRoute } from '../../types/procurement';
 import {
   Search,
   Filter,
@@ -7,10 +7,7 @@ import {
   ChevronDown,
   ChevronRight,
   ShieldAlert,
-  CheckCircle2,
-  AlertTriangle,
   UserCheck,
-  FileSpreadsheet,
 } from 'lucide-react';
 
 interface BuyerWorkspaceProps {
@@ -33,10 +30,8 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
   const [selectedDecision, setSelectedDecision] = useState<string>('ALL');
   const [selectedRoute, setSelectedRoute] = useState<string>('ALL');
 
-  // Expanded rows state
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
-  // Override modal state
   const [modalRequirement, setModalRequirement] = useState<Requirement | null>(null);
   const [overrideRoute, setOverrideRoute] = useState<ProcurementRoute>('RFQ');
   const [overrideComment, setOverrideComment] = useState('');
@@ -51,21 +46,21 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
   const getRouteBadge = (route: string) => {
     switch (route) {
       case 'CONTRACT_PO':
-        return 'bg-emerald-500/10 text-[#34d399] border-emerald-500/25';
+        return 'bg-[#E8F5EE] text-[#16845B] border-[#B6E2CC]';
       case 'SPOT_PO':
-        return 'bg-sky-500/10 text-[#38bdf8] border-sky-500/25';
+        return 'bg-[#EBF1FD] text-[#315FCE] border-[#C7D7F9]';
       case 'EMERGENCY_PO':
-        return 'bg-red-500/15 text-[#f87171] border-red-500/30';
+        return 'bg-[#FDF0F0] text-[#C74747] border-[#F7C6C6]';
       case 'RFQ':
-        return 'bg-amber-500/10 text-[#fbbf24] border-amber-500/25';
+        return 'bg-[#FDF7EB] text-[#C58A25] border-[#F6DFB3]';
       case 'RFP':
-        return 'bg-purple-500/10 text-[#a78bfa] border-purple-500/25';
+        return 'bg-[#F3E8FF] text-[#7E22CE] border-[#E9D5FF]';
       case 'CAPEX_SOURCING':
-        return 'bg-fuchsia-500/10 text-[#e879f9] border-fuchsia-500/25';
+        return 'bg-[#FDF2F8] text-[#BE185D] border-[#FBCFE8]';
       case 'NEW_ITEM_SOURCING':
-        return 'bg-slate-500/15 text-[#94a3b8] border-slate-500/30';
+        return 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]';
       default:
-        return 'bg-slate-700/20 text-slate-300 border-slate-700/40';
+        return 'bg-[#F5F6F8] text-[#687586] border-[#E1E5EA]';
     }
   };
 
@@ -109,116 +104,116 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden p-7 gap-6 bg-[#090d16]">
-      {/* Page Title & Reload */}
+    <div className="flex-1 flex flex-col h-full overflow-hidden p-6 gap-4 bg-[#F5F6F8]">
+      {/* Page Title & Action */}
       <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-white">
+          <h1 className="text-lg font-semibold tracking-tight text-[#202B38]">
             Buyer Decision Workspace
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Evaluate automated decisions under Corvo Procurement Policy Clauses 1–8 with full audit transparency.
+          <p className="text-xs text-[#687586] mt-0.5">
+            Operational review table for clubbed purchase requirements evaluated under Corvo Procurement Policy Clauses 1–8.
           </p>
         </div>
         <button
           onClick={onReloadSample}
-          className="flex items-center gap-1.5 h-9 px-3 text-xs font-medium text-slate-300 bg-[#111827] hover:bg-white/[0.06] border border-white/[0.08] rounded-[6px] transition-colors"
+          className="flex items-center gap-1.5 h-8 px-3 text-xs font-medium text-[#202B38] bg-white hover:bg-[#F5F6F8] border border-[#CAD0D8] rounded-[4px] transition-colors shadow-2xs"
         >
-          <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+          <RotateCcw className="w-3.5 h-3.5 text-[#687586]" />
           <span>Reload Sample Batch</span>
         </button>
       </div>
 
-      {/* KPI Cards Row (Compact, 4-column) */}
-      <div className="grid grid-cols-4 gap-4 shrink-0">
+      {/* KPI Summary Strip (Compact, High Density) */}
+      <div className="grid grid-cols-4 gap-3 shrink-0">
         {/* Total Lines */}
-        <div className="bg-[#111827] border border-white/[0.08] p-4 rounded-[10px] flex flex-col justify-between">
-          <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
-            Total PR Lines
+        <div className="bg-white border border-[#E1E5EA] p-3 rounded-[4px] flex flex-col justify-between">
+          <div className="text-[10px] font-semibold text-[#687586] uppercase tracking-wider">
+            Total Requisition Lines
           </div>
-          <div className="text-2xl font-semibold font-mono text-white tabular-nums my-1">
-            {isLoading ? <span className="animate-pulse text-slate-600">---</span> : kpis?.total_pr_lines ?? 0}
+          <div className="text-xl font-bold font-mono text-[#202B38] tabular-nums mt-1">
+            {isLoading ? '---' : kpis?.total_pr_lines ?? 0}
           </div>
-          <div className="text-[11px] text-slate-500 font-mono">
-            Across 2 plants: PUN1 & CHK1
+          <div className="text-[10px] text-[#8D99A8] font-mono">
+            Plants: PUN1 (Bhosari) & CHK1 (Chakan)
           </div>
         </div>
 
         {/* Clubbed Requirements */}
-        <div className="bg-[#111827] border border-white/[0.08] p-4 rounded-[10px] flex flex-col justify-between">
+        <div className="bg-white border border-[#E1E5EA] p-3 rounded-[4px] flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
+            <span className="text-[10px] font-semibold text-[#687586] uppercase tracking-wider">
               Clubbed Requirements
             </span>
-            <span className="text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.2 rounded">
+            <span className="text-[9px] font-mono bg-[#EBF1FD] text-[#315FCE] border border-[#C7D7F9] px-1 py-0.2 rounded">
               Clause 2
             </span>
           </div>
-          <div className="text-2xl font-semibold font-mono text-blue-400 tabular-nums my-1">
-            {isLoading ? <span className="animate-pulse text-slate-600">---</span> : kpis?.total_requirements ?? 0}
+          <div className="text-xl font-bold font-mono text-[#315FCE] tabular-nums mt-1">
+            {isLoading ? '---' : kpis?.total_requirements ?? 0}
           </div>
-          <div className="text-[11px] text-slate-500 font-mono">
+          <div className="text-[10px] text-[#8D99A8] font-mono">
             Anti-split window: 14d / 7d need-by
           </div>
         </div>
 
         {/* Direct POs */}
-        <div className="bg-[#111827] border border-white/[0.08] p-4 rounded-[10px] flex flex-col justify-between">
+        <div className="bg-white border border-[#E1E5EA] p-3 rounded-[4px] flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
-              Direct POs
+            <span className="text-[10px] font-semibold text-[#687586] uppercase tracking-wider">
+              Direct POs Placed
             </span>
-            <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.2 rounded">
+            <span className="text-[9px] font-mono bg-[#E8F5EE] text-[#16845B] border border-[#B6E2CC] px-1 py-0.2 rounded">
               Automated
             </span>
           </div>
-          <div className="text-2xl font-semibold font-mono text-emerald-400 tabular-nums my-1">
-            {isLoading ? <span className="animate-pulse text-slate-600">---</span> : kpis?.direct_pos ?? 0}
+          <div className="text-xl font-bold font-mono text-[#16845B] tabular-nums mt-1">
+            {isLoading ? '---' : kpis?.direct_pos ?? 0}
           </div>
-          <div className="text-[11px] text-slate-500 font-mono">
+          <div className="text-[10px] text-[#8D99A8] font-mono">
             Contract, Spot & Emergency routes
           </div>
         </div>
 
         {/* Sourcing Requests */}
-        <div className="bg-[#111827] border border-white/[0.08] p-4 rounded-[10px] flex flex-col justify-between">
+        <div className="bg-white border border-[#E1E5EA] p-3 rounded-[4px] flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
-              Sourcing Requests
+            <span className="text-[10px] font-semibold text-[#687586] uppercase tracking-wider">
+              Sourcing Events
             </span>
-            <span className="text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.2 rounded">
+            <span className="text-[9px] font-mono bg-[#FDF7EB] text-[#C58A25] border border-[#F6DFB3] px-1 py-0.2 rounded">
               Tenders
             </span>
           </div>
-          <div className="text-2xl font-semibold font-mono text-amber-400 tabular-nums my-1">
-            {isLoading ? <span className="animate-pulse text-slate-600">---</span> : kpis?.sourcing_requests ?? 0}
+          <div className="text-xl font-bold font-mono text-[#C58A25] tabular-nums mt-1">
+            {isLoading ? '---' : kpis?.sourcing_requests ?? 0}
           </div>
-          <div className="text-[11px] text-slate-500 font-mono">
-            RFQ, RFP & Capex sourcing tenders
+          <div className="text-[10px] text-[#8D99A8] font-mono">
+            RFQ, RFP & Capex tender requests
           </div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-2.5 shrink-0 bg-white border border-[#E1E5EA] p-2 rounded-[4px]">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8D99A8]" />
           <input
             type="text"
             placeholder="Search by Requirement ID, Item Code, Plant or Reason..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#111827] border border-white/[0.08] pl-9 pr-4 h-10 rounded-[6px] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-white/[0.2] transition-colors"
+            className="w-full bg-[#F5F6F8] border border-[#E1E5EA] pl-8 pr-3 h-8 rounded-[4px] text-xs text-[#202B38] placeholder-[#8D99A8] focus:outline-none focus:border-[#CAD0D8]"
           />
         </div>
 
         {/* Plant Filter */}
-        <div className="flex items-center gap-2 bg-[#111827] border border-white/[0.08] px-3 h-10 rounded-[6px]">
-          <span className="text-xs text-slate-400">Plant:</span>
+        <div className="flex items-center gap-1.5 px-2 h-8 bg-[#F5F6F8] border border-[#E1E5EA] rounded-[4px]">
+          <span className="text-[11px] text-[#687586]">Plant:</span>
           <select
             value={selectedPlant}
             onChange={(e) => setSelectedPlant(e.target.value)}
-            className="bg-transparent text-xs text-white focus:outline-none cursor-pointer"
+            className="bg-transparent text-xs text-[#202B38] font-medium focus:outline-none cursor-pointer"
           >
             <option value="ALL">All Plants</option>
             <option value="PUN1">PUN1 (Bhosari)</option>
@@ -227,12 +222,12 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
         </div>
 
         {/* Decision Filter */}
-        <div className="flex items-center gap-2 bg-[#111827] border border-white/[0.08] px-3 h-10 rounded-[6px]">
-          <span className="text-xs text-slate-400">Decision:</span>
+        <div className="flex items-center gap-1.5 px-2 h-8 bg-[#F5F6F8] border border-[#E1E5EA] rounded-[4px]">
+          <span className="text-[11px] text-[#687586]">Decision:</span>
           <select
             value={selectedDecision}
             onChange={(e) => setSelectedDecision(e.target.value)}
-            className="bg-transparent text-xs text-white focus:outline-none cursor-pointer"
+            className="bg-transparent text-xs text-[#202B38] font-medium focus:outline-none cursor-pointer"
           >
             <option value="ALL">All Decisions</option>
             <option value="PO">PO Only</option>
@@ -241,13 +236,13 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
         </div>
 
         {/* Route Filter */}
-        <div className="flex items-center gap-2 bg-[#111827] border border-white/[0.08] px-3 h-10 rounded-[6px]">
-          <Filter className="w-3.5 h-3.5 text-slate-500" />
-          <span className="text-xs text-slate-400">Route:</span>
+        <div className="flex items-center gap-1.5 px-2 h-8 bg-[#F5F6F8] border border-[#E1E5EA] rounded-[4px]">
+          <Filter className="w-3 h-3 text-[#687586]" />
+          <span className="text-[11px] text-[#687586]">Route:</span>
           <select
             value={selectedRoute}
             onChange={(e) => setSelectedRoute(e.target.value)}
-            className="bg-transparent text-xs text-white focus:outline-none cursor-pointer"
+            className="bg-transparent text-xs text-[#202B38] font-medium focus:outline-none cursor-pointer"
           >
             <option value="ALL">All Routes</option>
             <option value="CONTRACT_PO">CONTRACT_PO</option>
@@ -261,31 +256,30 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
         </div>
       </div>
 
-      {/* Primary Data Table */}
-      <div className="flex-1 bg-[#111827] border border-white/[0.08] rounded-[10px] overflow-hidden flex flex-col">
+      {/* Table-First Primary Grid */}
+      <div className="flex-1 bg-white border border-[#E1E5EA] rounded-[4px] overflow-hidden flex flex-col shadow-2xs">
         <div className="overflow-auto flex-1">
           <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-[#161f30] sticky top-0 z-10 border-b border-white/[0.08]">
-              <tr className="text-slate-400 h-10">
-                <th className="py-2.5 px-3 font-medium w-8"></th>
-                <th className="py-2.5 px-3 font-medium">Group ID</th>
-                <th className="py-2.5 px-3 font-medium">Item Code</th>
-                <th className="py-2.5 px-3 font-medium">Plant</th>
-                <th className="py-2.5 px-3 font-medium text-right">Total Qty</th>
-                <th className="py-2.5 px-3 font-medium text-right">Requirement Value</th>
-                <th className="py-2.5 px-3 font-medium">Route & Decision</th>
-                <th className="py-2.5 px-3 font-medium">Awarded / Suggested Supplier</th>
-                <th className="py-2.5 px-3 font-medium max-w-[260px]">Policy Justification</th>
-                <th className="py-2.5 px-3 font-medium text-right">Actions</th>
+            <thead className="bg-[#F5F6F8] sticky top-0 z-10 border-b border-[#E1E5EA]">
+              <tr className="text-[#687586] h-9">
+                <th className="py-2 px-2.5 font-medium w-8"></th>
+                <th className="py-2 px-2.5 font-medium">Group ID</th>
+                <th className="py-2 px-2.5 font-medium">Item Code</th>
+                <th className="py-2 px-2.5 font-medium">Plant</th>
+                <th className="py-2 px-2.5 font-medium text-right">Total Qty</th>
+                <th className="py-2 px-2.5 font-medium text-right">Group Value</th>
+                <th className="py-2 px-2.5 font-medium">Route & Decision</th>
+                <th className="py-2 px-2.5 font-medium">Awarded / Suggested Supplier</th>
+                <th className="py-2 px-2.5 font-medium max-w-[260px]">Policy Clause & Justification</th>
+                <th className="py-2 px-2.5 font-medium text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.04]">
+            <tbody className="divide-y divide-[#E1E5EA]">
               {isLoading ? (
-                // Skeleton Screen Rows
-                Array.from({ length: 10 }).map((_, i) => (
-                  <tr key={i} className="h-14 animate-pulse">
-                    <td colSpan={10} className="px-4 py-3">
-                      <div className="h-4 bg-white/[0.04] rounded w-full"></div>
+                Array.from({ length: 12 }).map((_, i) => (
+                  <tr key={i} className="h-11 animate-pulse">
+                    <td colSpan={10} className="px-3 py-2.5">
+                      <div className="h-3.5 bg-[#E1E5EA] rounded w-full"></div>
                     </td>
                   </tr>
                 ))
@@ -296,95 +290,95 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
 
                   return (
                     <React.Fragment key={req.group_id}>
-                      <tr className="h-14 hover:bg-white/[0.02] transition-colors group">
+                      <tr className="h-11 hover:bg-[#F9FAFB] transition-colors group">
                         {/* Expand Trigger */}
-                        <td className="py-3 px-3">
+                        <td className="py-2 px-2.5 text-center">
                           {hasLines && (
                             <button
                               onClick={() => toggleExpand(req.group_id)}
-                              className="text-slate-500 hover:text-slate-200 transition-colors"
+                              className="text-[#8D99A8] hover:text-[#202B38] transition-colors"
                               title={isExpanded ? 'Collapse constituent PRs' : 'Expand constituent PRs'}
                             >
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4" />
+                                <ChevronDown className="w-3.5 h-3.5" />
                               ) : (
-                                <ChevronRight className="w-4 h-4" />
+                                <ChevronRight className="w-3.5 h-3.5" />
                               )}
                             </button>
                           )}
                         </td>
 
                         {/* Group ID */}
-                        <td className="py-3 px-3 font-mono font-medium text-slate-300 tabular-nums">
+                        <td className="py-2 px-2.5 font-mono font-medium text-[#202B38] tabular-nums">
                           {req.group_id}
                           {hasLines && req.lines!.length > 1 && (
-                            <span className="ml-1.5 text-[10px] font-mono text-blue-400 bg-blue-500/10 border border-blue-500/20 px-1 py-0.2 rounded">
+                            <span className="ml-1 text-[9px] font-mono text-[#315FCE] bg-[#EBF1FD] border border-[#C7D7F9] px-1 py-0.2 rounded-[2px]">
                               {req.lines!.length} lines
                             </span>
                           )}
                         </td>
 
-                        {/* Resolved Item Code */}
-                        <td className="py-3 px-3 font-mono font-semibold text-white">
+                        {/* Item Code */}
+                        <td className="py-2 px-2.5 font-mono font-semibold text-[#202B38]">
                           {req.resolved_item_code || 'UNMATCHED'}
                         </td>
 
                         {/* Plant */}
-                        <td className="py-3 px-3 font-medium text-slate-300">{req.plant}</td>
+                        <td className="py-2 px-2.5 font-medium text-[#202B38]">{req.plant}</td>
 
                         {/* Total Qty (Right Aligned) */}
-                        <td className="py-3 px-3 font-mono text-slate-300 text-right tabular-nums">
+                        <td className="py-2 px-2.5 font-mono text-[#202B38] text-right tabular-nums">
                           {req.total_quantity}
                         </td>
 
                         {/* Requirement Value (Right Aligned) */}
-                        <td className="py-3 px-3 font-mono font-semibold text-white text-right tabular-nums">
+                        <td className="py-2 px-2.5 font-mono font-semibold text-[#202B38] text-right tabular-nums">
                           {formatINR(req.group_value_inr)}
                         </td>
 
                         {/* Route Badge */}
-                        <td className="py-3 px-3">
+                        <td className="py-2 px-2.5">
                           <span
-                            className={`inline-block px-2 py-0.5 rounded text-[11px] font-mono font-semibold border ${getRouteBadge(
+                            className={`inline-block px-1.5 py-0.2 rounded-[3px] text-[10px] font-mono font-semibold border ${getRouteBadge(
                               req.route
                             )}`}
                           >
                             {req.route}
                           </span>
-                          <div className="text-[10px] text-slate-500 mt-0.5">
-                            {req.decision} {req.po_id ? `· ${req.po_id}` : ''}
-                          </div>
+                          <span className="text-[10px] text-[#687586] ml-1.5 font-mono">
+                            {req.po_id || req.decision}
+                          </span>
                         </td>
 
                         {/* Suppliers */}
-                        <td className="py-3 px-3">
+                        <td className="py-2 px-2.5">
                           {req.supplier_id ? (
-                            <span className="font-semibold text-emerald-400 font-mono">
-                              {req.supplier_id} <span className="text-[10px] text-slate-500">(Awarded)</span>
+                            <span className="font-semibold text-[#16845B] font-mono text-[11px]">
+                              {req.supplier_id} <span className="text-[9px] text-[#687586] font-sans font-normal">(Awarded)</span>
                             </span>
                           ) : req.suggested_suppliers && req.suggested_suppliers.length > 0 ? (
-                            <span className="font-mono text-slate-300">
+                            <span className="font-mono text-[#202B38] text-[11px]">
                               {req.suggested_suppliers.join(', ')}{' '}
-                              <span className="text-[10px] text-amber-400/80">(Suggested)</span>
+                              <span className="text-[9px] text-[#C58A25] font-sans font-normal">(Suggested)</span>
                             </span>
                           ) : (
-                            <span className="text-slate-500 italic">None</span>
+                            <span className="text-[#8D99A8] italic text-[11px]">None</span>
                           )}
                         </td>
 
                         {/* Justification */}
                         <td
-                          className="py-3 px-3 text-slate-400 text-[11px] max-w-[280px] truncate"
+                          className="py-2 px-2.5 text-[#687586] text-[11px] max-w-[280px] truncate"
                           title={req.reason}
                         >
                           {req.reason}
                         </td>
 
-                        {/* Action (Revealed on row hover or permanent) */}
-                        <td className="py-3 px-3 text-right">
+                        {/* Action */}
+                        <td className="py-2 px-2.5 text-right">
                           <button
                             onClick={() => handleOpenOverride(req)}
-                            className="h-[30px] px-2.5 text-[11px] font-medium bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/[0.08] rounded-[6px] transition-colors"
+                            className="h-7 px-2 text-[11px] font-medium bg-white hover:bg-[#F5F6F8] text-[#202B38] border border-[#CAD0D8] rounded-[3px] transition-colors"
                           >
                             Override
                           </button>
@@ -393,43 +387,43 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
 
                       {/* Expanded Sub-Row showing Constituent PR lines */}
                       {isExpanded && req.lines && (
-                        <tr className="bg-[#0b101c]/80 border-b border-white/[0.04]">
-                          <td colSpan={10} className="px-6 py-3">
-                            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                              <span>Constituent Purchase Requisitions Clubbed in {req.group_id}:</span>
+                        <tr className="bg-[#F9FAFB] border-b border-[#E1E5EA]">
+                          <td colSpan={10} className="px-6 py-2.5">
+                            <div className="text-[10px] font-semibold text-[#687586] uppercase tracking-wider mb-1.5">
+                              Constituent Purchase Requisitions in {req.group_id}:
                             </div>
-                            <div className="bg-[#111827] border border-white/[0.06] rounded-[6px] overflow-hidden">
+                            <div className="bg-white border border-[#E1E5EA] rounded-[3px] overflow-hidden">
                               <table className="w-full text-left text-[11px]">
-                                <thead className="bg-[#161f30] text-slate-400 border-b border-white/[0.06]">
-                                  <tr>
-                                    <th className="py-1.5 px-3 font-medium">PR Number</th>
-                                    <th className="py-1.5 px-3 font-medium">Line</th>
-                                    <th className="py-1.5 px-3 font-medium">Requester</th>
-                                    <th className="py-1.5 px-3 font-medium">Department</th>
-                                    <th className="py-1.5 px-3 font-medium text-right">Quantity</th>
-                                    <th className="py-1.5 px-3 font-medium">Created Date</th>
-                                    <th className="py-1.5 px-3 font-medium">Need-By Date</th>
-                                    <th className="py-1.5 px-3 font-medium">Urgency</th>
+                                <thead className="bg-[#F5F6F8] text-[#687586] border-b border-[#E1E5EA]">
+                                  <tr className="h-7">
+                                    <th className="py-1 px-2.5 font-medium">PR Number</th>
+                                    <th className="py-1 px-2.5 font-medium">Line</th>
+                                    <th className="py-1 px-2.5 font-medium">Requester</th>
+                                    <th className="py-1 px-2.5 font-medium">Department</th>
+                                    <th className="py-1 px-2.5 font-medium text-right">Quantity</th>
+                                    <th className="py-1 px-2.5 font-medium">Created Date</th>
+                                    <th className="py-1 px-2.5 font-medium">Need-By Date</th>
+                                    <th className="py-1 px-2.5 font-medium">Urgency</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-white/[0.04]">
+                                <tbody className="divide-y divide-[#E1E5EA]">
                                   {req.lines.map((line, idx) => (
-                                    <tr key={idx} className="hover:bg-white/[0.02]">
-                                      <td className="py-1.5 px-3 font-mono font-medium text-blue-400">{line.pr_no}</td>
-                                      <td className="py-1.5 px-3 font-mono">{line.pr_line}</td>
-                                      <td className="py-1.5 px-3 text-slate-300">{line.requester}</td>
-                                      <td className="py-1.5 px-3 text-slate-400">{line.department}</td>
-                                      <td className="py-1.5 px-3 font-mono text-right text-slate-200">
+                                    <tr key={idx} className="h-7 hover:bg-[#F9FAFB]">
+                                      <td className="py-1 px-2.5 font-mono font-medium text-[#315FCE]">{line.pr_no}</td>
+                                      <td className="py-1 px-2.5 font-mono">{line.pr_line}</td>
+                                      <td className="py-1 px-2.5 text-[#202B38]">{line.requester}</td>
+                                      <td className="py-1 px-2.5 text-[#687586]">{line.department}</td>
+                                      <td className="py-1 px-2.5 font-mono text-right text-[#202B38]">
                                         {line.quantity} {line.uom}
                                       </td>
-                                      <td className="py-1.5 px-3 font-mono text-slate-400">{line.created_at}</td>
-                                      <td className="py-1.5 px-3 font-mono text-slate-400">{line.need_by_date}</td>
-                                      <td className="py-1.5 px-3">
+                                      <td className="py-1 px-2.5 font-mono text-[#687586]">{line.created_at}</td>
+                                      <td className="py-1 px-2.5 font-mono text-[#687586]">{line.need_by_date}</td>
+                                      <td className="py-1 px-2.5">
                                         <span
-                                          className={`px-1.5 py-0.2 rounded text-[10px] font-mono ${
+                                          className={`px-1.5 py-0.2 rounded text-[9px] font-mono ${
                                             line.urgency === 'Emergency'
-                                              ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                              : 'text-slate-400'
+                                              ? 'bg-[#FDF0F0] text-[#C74747] border border-[#F7C6C6]'
+                                              : 'text-[#687586]'
                                           }`}
                                         >
                                           {line.urgency}
@@ -450,8 +444,8 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
 
               {!isLoading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="py-16 text-center text-slate-500 text-xs">
-                    No requirements match the active filters.
+                  <td colSpan={10} className="py-12 text-center text-[#8D99A8] text-xs">
+                    No purchase requirements match the selected filters.
                   </td>
                 </tr>
               )}
@@ -462,82 +456,84 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
 
       {/* Buyer Decision Override Modal */}
       {modalRequirement && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
-          <div className="bg-[#161f30] border border-white/[0.14] w-full max-w-lg rounded-[10px] p-6 shadow-2xl flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white border border-[#CAD0D8] w-full max-w-lg rounded-[4px] shadow-xl flex flex-col animate-in fade-in zoom-in-95 duration-150 overflow-hidden">
+            <div className="bg-[#172536] text-white px-5 py-3.5 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <ShieldAlert className="w-4 h-4 text-amber-400" />
-                  <span>Buyer Policy Override & Audit Authorization</span>
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4 text-[#F6DFB3]" />
+                  <span>Buyer Policy Override Authorization</span>
                 </h3>
-                <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                <p className="text-[11px] text-[#C7D0DA] font-mono mt-0.5">
                   Requirement: {modalRequirement.group_id} ({modalRequirement.resolved_item_code}) · Current Route: {modalRequirement.route}
                 </p>
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                New Target Route
-              </label>
-              <select
-                value={overrideRoute}
-                onChange={(e) => setOverrideRoute(e.target.value as ProcurementRoute)}
-                className="w-full bg-[#111827] border border-white/[0.1] h-10 rounded-[6px] px-3 text-xs text-white focus:outline-none focus:border-white/[0.2]"
-              >
-                <option value="CONTRACT_PO">CONTRACT_PO (Direct Order under Rate Contract)</option>
-                <option value="SPOT_PO">SPOT_PO (Spot PO to Preferred Supplier)</option>
-                <option value="EMERGENCY_PO">EMERGENCY_PO (Fast-Track Emergency PO)</option>
-                <option value="RFQ">RFQ (Competitive Quotation Sourcing - 3 Suppliers)</option>
-                <option value="RFP">RFP (Formal Tender Sourcing - 5 Suppliers)</option>
-                <option value="CAPEX_SOURCING">CAPEX_SOURCING (Capital Equipment Tender)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Mandatory Written Justification (Permanent Audit Log)
-              </label>
-              <textarea
-                rows={3}
-                placeholder="State the commercial or operational necessity for departing from automated procurement policy rules..."
-                value={overrideComment}
-                onChange={(e) => setOverrideComment(e.target.value)}
-                className="w-full bg-[#111827] border border-white/[0.1] rounded-[6px] p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-white/[0.2]"
-              ></textarea>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Authorizing Buyer Signature
-              </label>
-              <div className="flex items-center gap-2 bg-[#111827] border border-white/[0.1] h-10 px-3 rounded-[6px]">
-                <UserCheck className="w-3.5 h-3.5 text-blue-400" />
-                <input
-                  type="text"
-                  value={buyerSignature}
-                  onChange={(e) => setBuyerSignature(e.target.value)}
-                  className="bg-transparent text-xs text-white flex-1 focus:outline-none font-mono"
-                />
+            <div className="p-5 flex flex-col gap-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-[#202B38] mb-1">
+                  New Target Route
+                </label>
+                <select
+                  value={overrideRoute}
+                  onChange={(e) => setOverrideRoute(e.target.value as ProcurementRoute)}
+                  className="w-full bg-[#F5F6F8] border border-[#CAD0D8] h-9 rounded-[4px] px-2.5 text-xs text-[#202B38] focus:outline-none focus:border-[#315FCE]"
+                >
+                  <option value="CONTRACT_PO">CONTRACT_PO (Direct Order under Rate Contract)</option>
+                  <option value="SPOT_PO">SPOT_PO (Spot PO to Preferred Supplier)</option>
+                  <option value="EMERGENCY_PO">EMERGENCY_PO (Fast-Track Emergency PO)</option>
+                  <option value="RFQ">RFQ (Competitive Quotation Sourcing - 3 Suppliers)</option>
+                  <option value="RFP">RFP (Formal Tender Sourcing - 5 Suppliers)</option>
+                  <option value="CAPEX_SOURCING">CAPEX_SOURCING (Capital Equipment Tender)</option>
+                </select>
               </div>
-            </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/[0.08]">
-              <button
-                type="button"
-                onClick={() => setModalRequirement(null)}
-                className="h-9 px-3.5 text-xs font-medium text-slate-300 hover:bg-white/[0.06] rounded-[6px] transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmOverride}
-                disabled={isSubmitting}
-                className="h-9 px-4 text-xs font-medium bg-red-600 hover:bg-red-500 text-white rounded-[6px] transition-colors disabled:opacity-50"
-              >
-                {isSubmitting ? 'Recording Audit...' : 'Confirm Authorization'}
-              </button>
+              <div>
+                <label className="block text-xs font-semibold text-[#202B38] mb-1">
+                  Mandatory Written Justification (Permanent Audit Log)
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="State the commercial or operational necessity for departing from automated procurement policy rules..."
+                  value={overrideComment}
+                  onChange={(e) => setOverrideComment(e.target.value)}
+                  className="w-full bg-[#F5F6F8] border border-[#CAD0D8] rounded-[4px] p-2.5 text-xs text-[#202B38] placeholder-[#8D99A8] focus:outline-none focus:border-[#315FCE]"
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#202B38] mb-1">
+                  Authorizing Buyer Signature
+                </label>
+                <div className="flex items-center gap-2 bg-[#F5F6F8] border border-[#CAD0D8] h-9 px-2.5 rounded-[4px]">
+                  <UserCheck className="w-3.5 h-3.5 text-[#315FCE]" />
+                  <input
+                    type="text"
+                    value={buyerSignature}
+                    onChange={(e) => setBuyerSignature(e.target.value)}
+                    className="bg-transparent text-xs text-[#202B38] font-mono flex-1 focus:outline-none font-semibold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E1E5EA]">
+                <button
+                  type="button"
+                  onClick={() => setModalRequirement(null)}
+                  className="h-8 px-3 text-xs font-medium text-[#687586] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmOverride}
+                  disabled={isSubmitting}
+                  className="h-8 px-3.5 text-xs font-semibold bg-[#C74747] hover:bg-[#A83838] text-white rounded-[4px] transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Recording Audit...' : 'Confirm Authorization'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -4,16 +4,14 @@ import {
   Send,
   Bot,
   User,
-  Sparkles,
   CheckCircle2,
   Clock,
-  MapPin,
   Package,
-  Shield,
-  FileCheck2,
-  AlertCircle,
-  Calendar,
   Building,
+  Calendar,
+  AlertCircle,
+  FileCheck2,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface ChatIntakeProps {
@@ -26,7 +24,7 @@ export const ChatIntake: React.FC<ChatIntakeProps> = ({ onPRConfirmed, onShowToa
     {
       id: '1',
       sender: 'assistant',
-      text: 'Hello. I am the Corvo Procurement Intake Assistant. What materials, equipment, or spares do you need for your plant today?',
+      text: 'Corvo Engineering Procurement Assistant initialized. Specify item descriptions, quantities, plant locations (PUN1 Bhosari or CHK1 Chakan), and required delivery dates.',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -116,51 +114,51 @@ export const ChatIntake: React.FC<ChatIntakeProps> = ({ onPRConfirmed, onShowToa
   ];
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden p-7 gap-6 bg-[#090d16]">
+    <div className="flex-1 flex flex-col h-full overflow-hidden p-6 gap-4 bg-[#F5F6F8]">
       {/* Page Header */}
       <div className="shrink-0 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-white">
+          <h1 className="text-lg font-semibold tracking-tight text-[#202B38]">
             Conversational Requisition Intake
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Employees raise purchase requests naturally. Gemini 2.0 extracts entities and maps catalog items in real time.
+          <p className="text-xs text-[#687586] mt-0.5">
+            Employees raise purchase requests naturally. Gemini 2.0 extracts structured entities and maps catalog items in real time.
           </p>
         </div>
 
         <div>
           {engineMode === 'gemini_2.0_flash' ? (
-            <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
-              <span>AI Mode: Gemini 2.0 Flash (Active)</span>
+            <span className="px-2.5 py-1 rounded-[4px] text-xs font-mono font-medium bg-[#EBF1FD] text-[#315FCE] border border-[#C7D7F9] flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#315FCE]" />
+              <span>Engine: Gemini 2.0 Flash (Active)</span>
             </span>
           ) : (
-            <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-blue-400" />
-              <span>AI Mode: Deterministic Engine (Offline Safe)</span>
+            <span className="px-2.5 py-1 rounded-[4px] text-xs font-mono font-medium bg-white text-[#687586] border border-[#E1E5EA] flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#687586]" />
+              <span>Engine: Deterministic Fallback</span>
             </span>
           )}
         </div>
       </div>
 
       {/* Split Pane: 60% Left Chat + 40% Right Inspector */}
-      <div className="flex-1 grid grid-cols-12 gap-6 overflow-hidden">
+      <div className="flex-1 grid grid-cols-12 gap-4 overflow-hidden">
         {/* Left Pane (60%): Conversational Chat Thread */}
-        <div className="col-span-7 bg-[#111827] border border-white/[0.08] rounded-[10px] flex flex-col overflow-hidden">
+        <div className="col-span-7 bg-white border border-[#E1E5EA] rounded-[4px] flex flex-col overflow-hidden">
           {/* Messages Viewport */}
-          <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex gap-3 max-w-[85%] ${
+                className={`flex gap-2.5 max-w-[85%] ${
                   msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''
                 }`}
               >
                 <div
-                  className={`w-7 h-7 rounded-[6px] flex items-center justify-center shrink-0 text-xs font-medium ${
+                  className={`w-6 h-6 rounded-[3px] flex items-center justify-center shrink-0 text-xs font-semibold ${
                     msg.sender === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-[#161f30] text-blue-400 border border-white/[0.08]'
+                      ? 'bg-[#315FCE] text-white'
+                      : 'bg-[#F5F6F8] text-[#202B38] border border-[#E1E5EA]'
                   }`}
                 >
                   {msg.sender === 'user' ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
@@ -168,25 +166,25 @@ export const ChatIntake: React.FC<ChatIntakeProps> = ({ onPRConfirmed, onShowToa
 
                 <div className="flex flex-col gap-1">
                   <div
-                    className={`p-3.5 rounded-[10px] text-xs leading-relaxed ${
+                    className={`p-3 rounded-[4px] text-xs leading-relaxed ${
                       msg.sender === 'user'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-[#161f30] text-slate-200 border border-white/[0.08]'
+                        ? 'bg-[#EBF1FD] text-[#202B38] border border-[#C7D7F9]'
+                        : 'bg-[#F5F6F8] text-[#202B38] border border-[#E1E5EA]'
                     }`}
                   >
                     <p className="whitespace-pre-wrap">{msg.text}</p>
                   </div>
-                  <span className="text-[10px] font-mono text-slate-500 px-1">{msg.timestamp}</span>
+                  <span className="text-[10px] font-mono text-[#8D99A8] px-1">{msg.timestamp}</span>
                 </div>
               </div>
             ))}
             {loading && (
-              <div className="flex gap-3 max-w-[85%]">
-                <div className="w-7 h-7 rounded-[6px] bg-[#161f30] border border-white/[0.08] flex items-center justify-center text-blue-400">
+              <div className="flex gap-2.5 max-w-[85%]">
+                <div className="w-6 h-6 rounded-[3px] bg-[#F5F6F8] border border-[#E1E5EA] flex items-center justify-center text-[#315FCE]">
                   <Bot className="w-3.5 h-3.5 animate-spin" />
                 </div>
-                <div className="bg-[#161f30] border border-white/[0.08] p-3 rounded-[10px] text-xs text-slate-400 font-mono">
-                  Grounding against catalog and evaluating policy...
+                <div className="bg-[#F5F6F8] border border-[#E1E5EA] p-2.5 rounded-[4px] text-xs text-[#687586] font-mono">
+                  Grounding against catalog and parsing parameters...
                 </div>
               </div>
             )}
@@ -194,16 +192,15 @@ export const ChatIntake: React.FC<ChatIntakeProps> = ({ onPRConfirmed, onShowToa
           </div>
 
           {/* Prompt Chips */}
-          <div className="p-3 bg-[#0d131f] border-t border-white/[0.08] flex items-center gap-2 overflow-x-auto">
-            <span className="text-[11px] font-medium text-slate-500 shrink-0 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-400" />
-              <span>Try:</span>
+          <div className="p-2.5 bg-[#F5F6F8] border-t border-[#E1E5EA] flex items-center gap-2 overflow-x-auto">
+            <span className="text-[10px] font-semibold text-[#687586] uppercase tracking-wider shrink-0">
+              Quick Input:
             </span>
             {samplePrompts.map((prompt, i) => (
               <button
                 key={i}
                 onClick={() => handleSend(prompt)}
-                className="text-[11px] text-slate-300 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] px-2.5 py-1 rounded-[6px] whitespace-nowrap transition-colors"
+                className="text-[11px] text-[#202B38] bg-white hover:bg-[#E1E5EA] border border-[#E1E5EA] px-2.5 py-1 rounded-[3px] whitespace-nowrap transition-colors"
               >
                 {prompt}
               </button>
@@ -211,19 +208,19 @@ export const ChatIntake: React.FC<ChatIntakeProps> = ({ onPRConfirmed, onShowToa
           </div>
 
           {/* Input Bar */}
-          <div className="p-3 bg-[#111827] border-t border-white/[0.08] flex gap-2">
+          <div className="p-2.5 bg-white border-t border-[#E1E5EA] flex gap-2">
             <input
               type="text"
               placeholder="Type your purchase requisition (e.g. need 200 gloves for Chakan next Friday)..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              className="flex-1 bg-[#161f30] border border-white/[0.08] rounded-[6px] px-3.5 h-10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-white/[0.2]"
+              className="flex-1 bg-[#F5F6F8] border border-[#E1E5EA] rounded-[4px] px-3 h-9 text-xs text-[#202B38] placeholder-[#8D99A8] focus:outline-none focus:border-[#315FCE]"
             />
             <button
               onClick={() => handleSend()}
               disabled={!input.trim() || loading}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-4 h-10 rounded-[6px] text-xs font-semibold transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              className="bg-[#315FCE] hover:bg-[#254DB0] text-white px-3.5 h-9 rounded-[4px] text-xs font-semibold transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-2xs"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Send</span>
@@ -231,99 +228,99 @@ export const ChatIntake: React.FC<ChatIntakeProps> = ({ onPRConfirmed, onShowToa
           </div>
         </div>
 
-        {/* Right Pane (40%): Real-Time Requisition Inspector */}
-        <div className="col-span-5 flex flex-col gap-4 overflow-y-auto">
-          {/* Live Extraction Inspector Card */}
-          <div className="bg-[#111827] border border-white/[0.08] rounded-[10px] p-5 flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+        {/* Right Pane (40%): Requisition Ledger / Real-Time Inspector */}
+        <div className="col-span-5 flex flex-col gap-3 overflow-y-auto">
+          {/* Live Extraction Ledger Card */}
+          <div className="bg-white border border-[#E1E5EA] rounded-[4px] p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between pb-2.5 border-b border-[#E1E5EA]">
               <div className="flex items-center gap-2">
-                <FileCheck2 className="w-4 h-4 text-blue-400" />
-                <span className="text-xs font-semibold text-white uppercase tracking-wider">
-                  Requisition Inspector
+                <FileCheck2 className="w-4 h-4 text-[#315FCE]" />
+                <span className="text-xs font-semibold text-[#202B38] uppercase tracking-wider">
+                  Requisition Ledger
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-slate-400 bg-white/[0.04] border border-white/[0.08] px-1.5 py-0.5 rounded">
-                Live State
+              <span className="text-[10px] font-mono text-[#687586] bg-[#F5F6F8] border border-[#E1E5EA] px-1.5 py-0.2 rounded">
+                Live Parameters
               </span>
             </div>
 
             {/* Checklist of Core Fields */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {/* Item Code */}
-              <div className="flex items-center justify-between p-2.5 bg-[#161f30] border border-white/[0.06] rounded-[6px]">
+              <div className="flex items-center justify-between p-2 bg-[#F5F6F8] border border-[#E1E5EA] rounded-[3px]">
                 <div className="flex items-center gap-2">
-                  <Package className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-xs text-slate-300">Target Item</span>
+                  <Package className="w-3.5 h-3.5 text-[#687586]" />
+                  <span className="text-xs text-[#202B38]">Item Identification</span>
                 </div>
-                <div className="font-mono text-xs font-medium text-right">
+                <div className="font-mono text-xs text-right">
                   {currentDraft?.resolved_item_code ? (
-                    <span className="text-emerald-400 font-semibold">{currentDraft.resolved_item_code}</span>
+                    <span className="text-[#16845B] font-semibold">{currentDraft.resolved_item_code}</span>
                   ) : (
-                    <span className="text-slate-500 italic">Pending detection</span>
+                    <span className="text-[#8D99A8] italic">Pending detection</span>
                   )}
                 </div>
               </div>
 
               {/* Plant */}
-              <div className="flex items-center justify-between p-2.5 bg-[#161f30] border border-white/[0.06] rounded-[6px]">
+              <div className="flex items-center justify-between p-2 bg-[#F5F6F8] border border-[#E1E5EA] rounded-[3px]">
                 <div className="flex items-center gap-2">
-                  <Building className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-xs text-slate-300">Destination Plant</span>
+                  <Building className="w-3.5 h-3.5 text-[#687586]" />
+                  <span className="text-xs text-[#202B38]">Destination Plant</span>
                 </div>
-                <div className="font-mono text-xs font-medium text-right">
+                <div className="font-mono text-xs text-right">
                   {currentDraft?.plant ? (
-                    <span className="text-blue-400 font-semibold">{currentDraft.plant}</span>
+                    <span className="text-[#315FCE] font-semibold">{currentDraft.plant}</span>
                   ) : (
-                    <span className="text-slate-500 italic">Pending selection</span>
+                    <span className="text-[#8D99A8] italic">Pending selection</span>
                   )}
                 </div>
               </div>
 
               {/* Quantity */}
-              <div className="flex items-center justify-between p-2.5 bg-[#161f30] border border-white/[0.06] rounded-[6px]">
+              <div className="flex items-center justify-between p-2 bg-[#F5F6F8] border border-[#E1E5EA] rounded-[3px]">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-xs text-slate-300">Quantity & UoM</span>
+                  <Clock className="w-3.5 h-3.5 text-[#687586]" />
+                  <span className="text-xs text-[#202B38]">Quantity & UoM</span>
                 </div>
-                <div className="font-mono text-xs font-medium text-right">
+                <div className="font-mono text-xs text-right">
                   {currentDraft?.quantity ? (
-                    <span className="text-white font-semibold">
+                    <span className="text-[#202B38] font-semibold tabular-nums">
                       {currentDraft.quantity} {currentDraft.uom}
                     </span>
                   ) : (
-                    <span className="text-slate-500 italic">Pending quantity</span>
+                    <span className="text-[#8D99A8] italic">Pending quantity</span>
                   )}
                 </div>
               </div>
 
               {/* Need-by Date */}
-              <div className="flex items-center justify-between p-2.5 bg-[#161f30] border border-white/[0.06] rounded-[6px]">
+              <div className="flex items-center justify-between p-2 bg-[#F5F6F8] border border-[#E1E5EA] rounded-[3px]">
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-xs text-slate-300">Need-by Date</span>
+                  <Calendar className="w-3.5 h-3.5 text-[#687586]" />
+                  <span className="text-xs text-[#202B38]">Need-by Date</span>
                 </div>
-                <div className="font-mono text-xs font-medium text-right">
+                <div className="font-mono text-xs text-right">
                   {currentDraft?.need_by_date ? (
-                    <span className="text-white font-semibold">{currentDraft.need_by_date}</span>
+                    <span className="text-[#202B38] font-semibold tabular-nums">{currentDraft.need_by_date}</span>
                   ) : (
-                    <span className="text-slate-500 italic">Pending schedule</span>
+                    <span className="text-[#8D99A8] italic">Pending schedule</span>
                   )}
                 </div>
               </div>
 
               {/* Urgency */}
-              <div className="flex items-center justify-between p-2.5 bg-[#161f30] border border-white/[0.06] rounded-[6px]">
+              <div className="flex items-center justify-between p-2 bg-[#F5F6F8] border border-[#E1E5EA] rounded-[3px]">
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-xs text-slate-300">Urgency Classification</span>
+                  <AlertCircle className="w-3.5 h-3.5 text-[#687586]" />
+                  <span className="text-xs text-[#202B38]">Priority Level</span>
                 </div>
-                <div className="font-mono text-xs font-medium text-right">
+                <div className="font-mono text-xs text-right">
                   {currentDraft?.urgency === 'Emergency' ? (
-                    <span className="text-red-400 font-semibold bg-red-500/10 border border-red-500/20 px-1.5 py-0.2 rounded">
+                    <span className="text-[#C74747] font-semibold bg-[#FDF0F0] border border-[#F7C6C6] px-1.5 py-0.2 rounded">
                       Emergency (Breakdown)
                     </span>
                   ) : (
-                    <span className="text-slate-300">Normal Priority</span>
+                    <span className="text-[#687586]">Normal Priority</span>
                   )}
                 </div>
               </div>
@@ -331,17 +328,17 @@ export const ChatIntake: React.FC<ChatIntakeProps> = ({ onPRConfirmed, onShowToa
 
             {/* Ready Confirmation Box */}
             {currentDraft?.ready_to_submit && (
-              <div className="mt-2 p-4 bg-emerald-500/[0.06] border border-emerald-500/25 rounded-[8px] flex flex-col gap-3 animate-in fade-in duration-200">
-                <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>All Policy Prerequisites Verified</span>
+              <div className="p-3 bg-[#E8F5EE] border border-[#B6E2CC] rounded-[4px] flex flex-col gap-2 mt-1">
+                <div className="flex items-center gap-1.5 text-[#16845B] text-xs font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Requisition Parameters Verified</span>
                 </div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Requisition is complete and verified against Corvo catalog rules. Ready to generate draft PR and route into policy engine.
+                <p className="text-[11px] text-[#202B38] leading-relaxed">
+                  All mandatory procurement fields detected. Ready to draft purchase requisition into decision engine.
                 </p>
                 <button
                   onClick={handleConfirmPR}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs h-9 rounded-[6px] transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-[#16845B] hover:bg-[#126B49] text-white font-semibold text-xs h-8 rounded-[4px] transition-colors flex items-center justify-center gap-1.5 shadow-2xs mt-1"
                 >
                   <FileCheck2 className="w-3.5 h-3.5" />
                   <span>Submit Requisition to Engine</span>

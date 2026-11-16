@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Cpu,
 } from 'lucide-react';
 
 export type TabType =
@@ -44,21 +43,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`bg-[#090d16] border-r border-white/[0.08] flex flex-col justify-between p-3 shrink-0 transition-all duration-200 ${
+      className={`bg-[#172536] text-white flex flex-col justify-between p-3 shrink-0 transition-all duration-200 select-none ${
         collapsed ? 'w-[68px]' : 'w-[232px]'
       }`}
     >
       <div className="flex flex-col gap-1">
         {/* Module Header & Collapse Toggle */}
-        <div className="flex items-center justify-between px-2 mb-2 h-7">
+        <div className="flex items-center justify-between px-2 mb-2 h-7 text-[#8A9BAE]">
           {!collapsed && (
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+            <span className="text-[10px] font-semibold uppercase tracking-wider">
               Procurement Core
             </span>
           )}
           <button
             onClick={onToggleCollapse}
-            className="p-1 rounded hover:bg-white/[0.06] text-slate-400 hover:text-slate-200 ml-auto transition-colors"
+            className="p-1 rounded hover:bg-[#1F334A] text-[#8A9BAE] hover:text-white ml-auto transition-colors"
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
@@ -66,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Menu Items */}
-        <nav className="flex flex-col gap-1">
+        <nav className="flex flex-col gap-0.5">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -74,14 +73,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={item.id}
                 onClick={() => onSelectTab(item.id)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-[6px] text-xs font-medium transition-colors group relative ${
+                className={`flex items-center gap-3 px-3 py-2 rounded-[4px] text-xs font-medium transition-colors group relative ${
                   isActive
-                    ? 'bg-white/[0.08] text-white font-semibold'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
+                    ? 'bg-[#263D57] text-white font-semibold shadow-inner'
+                    : 'text-[#C7D0DA] hover:text-white hover:bg-[#1F334A]'
                 }`}
                 title={collapsed ? item.label : undefined}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-200'}`} />
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#87B4FA]' : 'text-[#8A9BAE] group-hover:text-white'}`} />
                 {!collapsed && (
                   <span className="truncate flex-1 text-left">{item.label}</span>
                 )}
@@ -89,8 +88,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span
                     className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
                       item.badge === 'AI'
-                        ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
-                        : 'bg-white/[0.05] text-slate-400 border border-white/[0.08]'
+                        ? 'bg-[#315FCE] text-white font-semibold'
+                        : 'bg-[#1F334A] text-[#C7D0DA]'
                     }`}
                   >
                     {item.badge}
@@ -103,23 +102,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Diagnostics Card */}
-      <div className="pt-3 border-t border-white/[0.08] text-[11px]">
+      <div className="pt-3 border-t border-[#1F334A] text-[11px]">
         {!collapsed ? (
-          <div className="bg-[#111827] border border-white/[0.06] p-2.5 rounded-[8px] flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-slate-300">
+          <div className="bg-[#1F334A] border border-[#2D4560] p-2.5 rounded-[4px] flex flex-col gap-1">
+            <div className="flex items-center justify-between text-white">
               <span className="font-semibold flex items-center gap-1.5">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#34D399]" />
                 <span>Engine Active</span>
               </span>
-              <span className="font-mono text-[10px] text-emerald-400">22/22 Tests</span>
+              <span className="font-mono text-[10px] text-[#34D399]">22/22 Tests</span>
             </div>
-            <div className="text-[10px] font-mono text-slate-500 truncate">
-              Corvo Engine · v1.0.0
+            <div className="text-[10px] font-mono text-[#8A9BAE] truncate">
+              Candidate: Aditya Kumar
             </div>
           </div>
         ) : (
-          <div className="flex justify-center" title="Engine Online (22/22 Tests Passing)">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+          <div className="flex justify-center" title="Engine Active (22/22 Tests Passing)">
+            <div className="w-2 h-2 rounded-full bg-[#34D399]"></div>
           </div>
         )}
       </div>
