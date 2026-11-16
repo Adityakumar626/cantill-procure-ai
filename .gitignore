@@ -53,10 +53,10 @@ Thumbs.db
 *.log
 
 # STRICT REQUIREMENT: DO NOT COMMIT TASK DATA FILES
-data/
-master_data/
-contracts/
-pr_batches/
+/data/
+/master_data/
+/contracts/
+/pr_batches/
 *.pdf
 Corvo_Procurement_Policy.pdf
 Worked_Examples.pdf
