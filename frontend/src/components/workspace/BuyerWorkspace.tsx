@@ -109,18 +109,15 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
       <div className="flex items-center justify-between shrink-0">
         <div>
           <h1 className="text-lg font-semibold tracking-tight text-[#202B38]">
-            Buyer Decision Workspace
+            Buyer Workspace
           </h1>
-          <p className="text-xs text-[#687586] mt-0.5">
-            Operational review table for clubbed purchase requirements evaluated under Corvo Procurement Policy Clauses 1–8.
-          </p>
         </div>
         <button
           onClick={onReloadSample}
           className="flex items-center gap-1.5 h-8 px-3 text-xs font-medium text-[#202B38] bg-white hover:bg-[#F5F6F8] border border-[#CAD0D8] rounded-[4px] transition-colors shadow-2xs"
         >
           <RotateCcw className="w-3.5 h-3.5 text-[#687586]" />
-          <span>Reload Sample Batch</span>
+          <span>Reload Sample</span>
         </button>
       </div>
 
@@ -134,62 +131,35 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
           <div className="text-xl font-bold font-mono text-[#202B38] tabular-nums mt-1">
             {isLoading ? '---' : kpis?.total_pr_lines ?? 0}
           </div>
-          <div className="text-[10px] text-[#8D99A8] font-mono">
-            Plants: PUN1 (Bhosari) & CHK1 (Chakan)
-          </div>
         </div>
 
         {/* Clubbed Requirements */}
         <div className="bg-white border border-[#E1E5EA] p-3 rounded-[4px] flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-semibold text-[#687586] uppercase tracking-wider">
-              Clubbed Requirements
-            </span>
-            <span className="text-[9px] font-mono bg-[#EBF1FD] text-[#315FCE] border border-[#C7D7F9] px-1 py-0.2 rounded">
-              Clause 2
-            </span>
+          <div className="text-[10px] font-semibold text-[#687586] uppercase tracking-wider">
+            Clubbed Requirements
           </div>
           <div className="text-xl font-bold font-mono text-[#315FCE] tabular-nums mt-1">
             {isLoading ? '---' : kpis?.total_requirements ?? 0}
-          </div>
-          <div className="text-[10px] text-[#8D99A8] font-mono">
-            Anti-split window: 14d / 7d need-by
           </div>
         </div>
 
         {/* Direct POs */}
         <div className="bg-white border border-[#E1E5EA] p-3 rounded-[4px] flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-semibold text-[#687586] uppercase tracking-wider">
-              Direct POs Placed
-            </span>
-            <span className="text-[9px] font-mono bg-[#E8F5EE] text-[#16845B] border border-[#B6E2CC] px-1 py-0.2 rounded">
-              Automated
-            </span>
+          <div className="text-[10px] font-semibold text-[#687586] uppercase tracking-wider">
+            Direct POs
           </div>
           <div className="text-xl font-bold font-mono text-[#16845B] tabular-nums mt-1">
             {isLoading ? '---' : kpis?.direct_pos ?? 0}
-          </div>
-          <div className="text-[10px] text-[#8D99A8] font-mono">
-            Contract, Spot & Emergency routes
           </div>
         </div>
 
         {/* Sourcing Requests */}
         <div className="bg-white border border-[#E1E5EA] p-3 rounded-[4px] flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-semibold text-[#687586] uppercase tracking-wider">
-              Sourcing Events
-            </span>
-            <span className="text-[9px] font-mono bg-[#FDF7EB] text-[#C58A25] border border-[#F6DFB3] px-1 py-0.2 rounded">
-              Tenders
-            </span>
+          <div className="text-[10px] font-semibold text-[#687586] uppercase tracking-wider">
+            Sourcing Requests
           </div>
           <div className="text-xl font-bold font-mono text-[#C58A25] tabular-nums mt-1">
             {isLoading ? '---' : kpis?.sourcing_requests ?? 0}
-          </div>
-          <div className="text-[10px] text-[#8D99A8] font-mono">
-            RFQ, RFP & Capex tender requests
           </div>
         </div>
       </div>

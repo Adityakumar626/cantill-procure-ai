@@ -101,24 +101,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
       </div>
 
-      {/* Diagnostics Card */}
+      {/* System Status */}
       <div className="pt-3 border-t border-[#1F334A] text-[11px]">
         {!collapsed ? (
-          <div className="bg-[#1F334A] border border-[#2D4560] p-2.5 rounded-[4px] flex flex-col gap-1">
-            <div className="flex items-center justify-between text-white">
-              <span className="font-semibold flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#34D399]" />
-                <span>Engine Active</span>
-              </span>
-              <span className="font-mono text-[10px] text-[#34D399]">22/22 Tests</span>
-            </div>
-            <div className="text-[10px] font-mono text-[#8A9BAE] truncate">
-              Candidate: Aditya Kumar
-            </div>
+          <div className="px-2 py-1 flex items-center justify-between text-[#8A9BAE]">
+            <span className="flex items-center gap-1.5 text-xs text-[#C7D0DA]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#34D399]"></span>
+              <span>Operational</span>
+            </span>
+            <span className="font-mono text-[10px] text-[#8A9BAE]">v5.0</span>
           </div>
         ) : (
-          <div className="flex justify-center" title="Engine Active (22/22 Tests Passing)">
-            <div className="w-2 h-2 rounded-full bg-[#34D399]"></div>
+          <div className="flex justify-center" title="Operational">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#34D399]"></div>
           </div>
         )}
       </div>

@@ -87,11 +87,8 @@ export const PolicyManager: React.FC<PolicyManagerProps> = ({
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold tracking-tight text-[#202B38]">
-            Policy as Data & Dynamic Amendment Studio
+            Policy Studio
           </h1>
-          <p className="text-xs text-[#687586] mt-0.5">
-            Procurement rules and spend thresholds are stored as structured versioned schemas, not code. Propose changes, preview plain-language diffs, and activate hot.
-          </p>
         </div>
       </div>
 

@@ -49,11 +49,8 @@ export const PreferredSuppliers: React.FC<PreferredSuppliersProps> = ({ onShowTo
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold tracking-tight text-[#202B38] flex items-center gap-2">
-            Clause 6: Preferred Supplier Matrix & Score Inspector
+            Preferred Suppliers
           </h1>
-          <p className="text-xs text-[#687586] mt-0.5">
-            Dynamically evaluated based on 548d PO history, exponential recency (90d / 365d), active contract bonuses, on-time delivery %, and quality rating.
-          </p>
         </div>
 
         <div className="flex items-center gap-2.5">

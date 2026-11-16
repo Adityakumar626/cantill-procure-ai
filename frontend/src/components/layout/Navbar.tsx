@@ -29,7 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
           </div>
           <p className="text-[11px] text-[#687586] font-normal">
-            Corvo Engineering · Industrial Operations (PUN1 Bhosari & CHK1 Chakan)
+            Corvo Engineering
           </p>
         </div>
       </div>
@@ -40,7 +40,6 @@ export const Navbar: React.FC<NavbarProps> = ({
         <span className="text-xs font-mono font-semibold text-[#202B38]">
           Policy {activePolicy} Active
         </span>
-        <span className="text-[11px] text-[#687586] font-mono">· Effective: 01-Apr-2026</span>
       </div>
 
       {/* Right Action Controls */}
@@ -61,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           onClick={onExportPreferred}
           className="flex items-center gap-1.5 h-9 px-3 text-xs font-medium text-[#202B38] bg-white hover:bg-[#F5F6F8] border border-[#CAD0D8] rounded-[4px] transition-colors"
-          title="Download aditya_kumar__preferred.csv"
+          title="Export Preferred Suppliers"
         >
           <FileSpreadsheet className="w-3.5 h-3.5 text-[#C58A25]" />
           <span>Export Suppliers</span>
@@ -71,17 +70,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           onClick={onExportBatch}
           className="flex items-center gap-1.5 h-9 px-3.5 text-xs font-semibold text-white bg-[#315FCE] hover:bg-[#254DB0] rounded-[4px] transition-colors shadow-sm"
-          title="Download aditya_kumar__run1.csv"
+          title="Export Decisions CSV"
         >
           <Download className="w-3.5 h-3.5" />
           <span>Export Decisions CSV</span>
         </button>
-
-        {/* Operational Latency Pill */}
-        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono text-[#16845B] bg-[#E8F5EE] border border-[#B6E2CC] rounded-[4px]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#16845B]"></span>
-          <span>Engine: Online (11ms)</span>
-        </div>
       </div>
     </header>
   );

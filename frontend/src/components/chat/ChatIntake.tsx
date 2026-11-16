@@ -119,23 +119,20 @@ export const ChatIntake: React.FC<ChatIntakeProps> = ({ onPRConfirmed, onShowToa
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold tracking-tight text-[#202B38]">
-            Conversational Requisition Intake
+            Chat Intake
           </h1>
-          <p className="text-xs text-[#687586] mt-0.5">
-            Employees raise purchase requests naturally. Gemini 2.0 extracts structured entities and maps catalog items in real time.
-          </p>
         </div>
 
         <div>
           {engineMode === 'gemini_2.0_flash' ? (
             <span className="px-2.5 py-1 rounded-[4px] text-xs font-mono font-medium bg-[#EBF1FD] text-[#315FCE] border border-[#C7D7F9] flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#315FCE]" />
-              <span>Engine: Gemini 2.0 Flash (Active)</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#315FCE]"></span>
+              <span>Gemini 2.0 Flash</span>
             </span>
           ) : (
             <span className="px-2.5 py-1 rounded-[4px] text-xs font-mono font-medium bg-white text-[#687586] border border-[#E1E5EA] flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#687586]" />
-              <span>Engine: Deterministic Fallback</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#16845B]"></span>
+              <span>Deterministic Engine</span>
             </span>
           )}
         </div>

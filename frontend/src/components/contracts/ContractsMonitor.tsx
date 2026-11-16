@@ -55,11 +55,8 @@ export const ContractsMonitor: React.FC<ContractsMonitorProps> = ({ onShowToast 
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold tracking-tight text-[#202B38] flex items-center gap-2">
-            Active Rate Contracts & Ceiling Monitor
+            Rate Contracts
           </h1>
-          <p className="text-xs text-[#687586] mt-0.5">
-            Monitors real-time ceiling consumption across register contracts and automatically ingested PDF contracts signed after register freeze.
-          </p>
         </div>
 
         <div className="flex items-center gap-2.5">
