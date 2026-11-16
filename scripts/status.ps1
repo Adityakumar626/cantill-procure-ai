@@ -1,4 +1,4 @@
-﻿# Cantill ProcureAI Health & Status Check for Windows PowerShell
+# Cantill ProcureAI Health & Status Check for Windows PowerShell
 $port = if ($env:PORT) { $env:PORT } else { "8000" }
 
 Write-Host "========================================================" -ForegroundColor Cyan

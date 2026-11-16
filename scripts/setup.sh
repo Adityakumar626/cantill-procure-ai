@@ -38,6 +38,13 @@ pip install -r requirements.txt
 echo "Running validation test suite..."
 pytest
 
+# Build React frontend if Node is installed
+if command -v npm &> /dev/null; then
+    echo "✔ Node.js detected ($(node --version)). Building modern React frontend..."
+    (cd frontend && npm install && npm run build)
+    echo "✔ React frontend built successfully into frontend/dist."
+fi
+
 echo "========================================================"
 echo "🎉 Setup complete! All 22 tests passing."
 echo "   Run './scripts/start_dev.sh' to launch application."

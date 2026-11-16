@@ -4,6 +4,7 @@ Provides REST endpoints for Batch Processing, Chat Intake, Policy-as-Data Versio
 """
 import csv
 import io
+from pathlib import Path
 from datetime import datetime, date
 from typing import List, Optional, Dict, Any
 from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException, Response
@@ -45,11 +46,18 @@ class AppState:
 
 state = AppState()
 
-# Mount Static Assets
+# Mount Static Assets & React Frontend Build
+REACT_DIST = Path("frontend/dist")
+if REACT_DIST.exists():
+    app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
+
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_index():
+    if (REACT_DIST / "index.html").exists():
+        with open(REACT_DIST / "index.html", "r", encoding="utf-8") as f:
+            return f.read()
     with open("app/static/index.html", "r", encoding="utf-8") as f:
         return f.read()
 

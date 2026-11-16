@@ -1,4 +1,4 @@
-﻿# Cantill ProcureAI Launcher for Windows PowerShell
+# Cantill ProcureAI Launcher for Windows PowerShell
 $ErrorActionPreference = "Stop"
 
 $port = if ($env:PORT) { $env:PORT } else { "8000" }

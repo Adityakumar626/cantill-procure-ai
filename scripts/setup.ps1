@@ -1,4 +1,4 @@
-﻿# Cantill ProcureAI Setup Script for Windows PowerShell
+# Cantill ProcureAI Setup Script for Windows PowerShell
 $ErrorActionPreference = "Stop"
 
 Write-Host "========================================================" -ForegroundColor Cyan
