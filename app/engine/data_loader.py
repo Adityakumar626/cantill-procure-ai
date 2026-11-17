@@ -91,6 +91,14 @@ class MasterDataLoader:
             pdf_contracts_dir=demo_dir / "contracts" / "pdf"
         )
         demo_loader.load_all()
+        self.plants_path = demo_loader.plants_path
+        self.suppliers_path = demo_loader.suppliers_path
+        self.items_path = demo_loader.items_path
+        self.po_history_path = demo_loader.po_history_path
+        self.contract_register_path = demo_loader.contract_register_path
+        self.contract_lines_path = demo_loader.contract_lines_path
+        self.pdf_contracts_dir = demo_loader.pdf_contracts_dir
+
         self.plants = demo_loader.plants
         self.suppliers = demo_loader.suppliers
         self.items = demo_loader.items
@@ -174,10 +182,18 @@ class MasterDataLoader:
 
     def load_contracts(self) -> Dict[str, Contract]:
         self.contracts = {}
-        if not self.contract_register_path.exists():
-            return self.contracts
+        reg_path = self.contract_register_path
+        lines_path = self.contract_lines_path
+        if not reg_path.exists():
+            demo_reg = Path(__file__).resolve().parent.parent / "demo_data" / "contracts" / "contract_register.csv"
+            demo_lines = Path(__file__).resolve().parent.parent / "demo_data" / "contracts" / "contract_lines.csv"
+            if demo_reg.exists():
+                reg_path = demo_reg
+                lines_path = demo_lines
+            else:
+                return self.contracts
 
-        with open(self.contract_register_path, "r", encoding="utf-8") as f:
+        with open(reg_path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 c = Contract(
@@ -192,8 +208,8 @@ class MasterDataLoader:
                 )
                 self.contracts[c.contract_id] = c
 
-        if self.contract_lines_path.exists():
-            with open(self.contract_lines_path, "r", encoding="utf-8") as f:
+        if lines_path.exists():
+            with open(lines_path, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
                     cid = row["contract_id"].strip()
