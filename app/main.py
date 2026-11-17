@@ -75,6 +75,7 @@ def get_spa_html() -> str:
         return f.read()
 
 @app.get("/", response_class=HTMLResponse)
+@app.head("/", response_class=HTMLResponse)
 @app.get("/workspace", response_class=HTMLResponse)
 @app.get("/chat", response_class=HTMLResponse)
 @app.get("/policy", response_class=HTMLResponse)
@@ -85,6 +86,7 @@ async def serve_spa_page():
     return get_spa_html()
 
 @app.get("/health")
+@app.head("/health")
 async def health_check():
     has_gemini = bool(os.environ.get("GEMINI_API_KEY") or GEMINI_API_KEY)
     items_cnt = len(state.loader.items)
