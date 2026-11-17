@@ -46,6 +46,6 @@ if command -v npm &> /dev/null; then
 fi
 
 echo "========================================================"
-echo "🎉 Setup complete! All 22 tests passing."
+echo "🎉 Setup complete! All 23 tests passing."
 echo "   Run './scripts/start_dev.sh' to launch application."
 echo "========================================================"
