@@ -80,7 +80,10 @@ export const App: React.FC = () => {
     setIsLoading(true);
     try {
       const res = await fetch('/api/process-batch', { method: 'POST' });
-      if (!res.ok) throw new Error('Failed to load batch decisions');
+      if (!res.ok) {
+        console.warn('Initial batch load returned status:', res.status);
+        return;
+      }
       const data = await res.json();
       setRequirements(data.requirements || []);
       setKpis(data.summary || null);
@@ -88,7 +91,7 @@ export const App: React.FC = () => {
         setActivePolicy(data.summary.active_policy);
       }
     } catch (err: any) {
-      addToast('error', 'Data Ingestion Error', err.message);
+      console.warn('Initial batch fetch failed:', err);
     } finally {
       setIsLoading(false);
     }

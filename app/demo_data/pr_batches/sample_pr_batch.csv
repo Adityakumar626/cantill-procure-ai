@@ -1,0 +1,4 @@
+pr_no,pr_line,created_at,requester,department,plant,item_code,description,quantity,uom,estimated_unit_price,need_by_date,urgency
+PR-DEMO-001,1,2026-11-10 10:00,Demo Requester,Manufacturing,PUN1,DEMO-1002,Synthetic Hex Bolt M10,1000,NOS,7.50,2026-11-20,Normal
+PR-DEMO-002,1,2026-11-11 11:30,Demo Requester,Maintenance,PUN1,DEMO-1001,Synthetic Hydraulic Oil 68,200,LTR,175.00,2026-11-22,Normal
+PR-DEMO-003,1,2026-11-12 14:15,Demo Projects,Projects,CHK1,DEMO-1003,Synthetic CNC Milling Machine,1,NOS,5000000.00,2026-12-01,Normal

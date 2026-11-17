@@ -72,6 +72,10 @@ class MasterDataLoader:
         self.load_contracts()
         self.augment_pdf_contracts()
 
+        # If task data directory is absent (e.g. cloud host deployment), auto-load synthetic demo data
+        if len(self.items) == 0:
+            self.load_synthetic_demo_data()
+
     def load_synthetic_demo_data(self):
         """Loads non-confidential synthetic demo master data for cloud inspection when task data is absent."""
         demo_dir = Path(__file__).resolve().parent.parent / "demo_data"

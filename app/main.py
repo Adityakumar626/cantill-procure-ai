@@ -146,13 +146,34 @@ async def process_batch(file: Optional[UploadFile] = File(None)):
     if file:
         content = (await file.read()).decode("utf-8")
     else:
-        # Fallback to sample batch
-        if not SAMPLE_PR_BATCH_CSV.exists():
-            raise HTTPException(status_code=400, detail="No PR batch uploaded and sample batch missing.")
-        with open(SAMPLE_PR_BATCH_CSV, "r", encoding="utf-8") as f:
-            content = f.read()
+        # Fallback to sample batch or synthetic demo batch
+        content = ""
+        if SAMPLE_PR_BATCH_CSV.exists():
+            with open(SAMPLE_PR_BATCH_CSV, "r", encoding="utf-8") as f:
+                content = f.read()
+        else:
+            demo_sample = Path(__file__).resolve().parent / "demo_data" / "pr_batches" / "sample_pr_batch.csv"
+            if demo_sample.exists():
+                with open(demo_sample, "r", encoding="utf-8") as f:
+                    content = f.read()
 
-    pr_lines = parse_pr_csv(content)
+    # If neither file was uploaded nor sample batch found, check chat PRs
+    if not content.strip() and not storage_manager.load_chat_prs():
+        return {
+            "summary": {
+                "total_pr_lines": 0,
+                "total_requirements": 0,
+                "direct_pos": 0,
+                "sourcing_requests": 0,
+                "total_spend_inr": 0.0,
+                "approved_count": 0,
+                "active_policy": state.policy_store.active_version,
+            },
+            "requirements": [],
+            "rows": []
+        }
+
+    pr_lines = parse_pr_csv(content) if content.strip() else []
 
     # Ingest any confirmed chat requisitions from persistent storage
     chat_prs = storage_manager.load_chat_prs()
@@ -300,11 +321,19 @@ async def export_batch_csv(filename: str = "decisions.csv"):
     """Downloads the latest processed batch as official 13-column CSV."""
     if not state.last_processed_rows:
         # Run sample batch if not yet processed
-        with open(SAMPLE_PR_BATCH_CSV, "r", encoding="utf-8") as f:
-            content = f.read()
-        pr_lines = parse_pr_csv(content)
-        pipeline = ProcurementPipeline(state.loader, state.policy_store.get_active_policy())
-        _, state.last_processed_rows = pipeline.process_pr_lines(pr_lines)
+        content = ""
+        if SAMPLE_PR_BATCH_CSV.exists():
+            with open(SAMPLE_PR_BATCH_CSV, "r", encoding="utf-8") as f:
+                content = f.read()
+        else:
+            demo_sample = Path(__file__).resolve().parent / "demo_data" / "pr_batches" / "sample_pr_batch.csv"
+            if demo_sample.exists():
+                with open(demo_sample, "r", encoding="utf-8") as f:
+                    content = f.read()
+        if content.strip():
+            pr_lines = parse_pr_csv(content)
+            pipeline = ProcurementPipeline(state.loader, state.policy_store.get_active_policy())
+            _, state.last_processed_rows = pipeline.process_pr_lines(pr_lines)
 
     output = io.StringIO()
     fieldnames = [
