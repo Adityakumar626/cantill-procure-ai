@@ -192,3 +192,19 @@ def test_manual_contract_registration():
     res_list = client.get("/api/contracts")
     contracts = res_list.json()["contracts"]
     assert any(c["contract_id"] == "RC-MANUAL-001" for c in contracts)
+
+def test_upload_policy_document():
+    """Verify policy upload endpoint parses JSON and registers policy."""
+    import json
+    from app.models.policy import get_default_policy_v5
+    pol = get_default_policy_v5()
+    pol.version = "v5.99-test"
+    pol_json = json.dumps(pol.to_dict()).encode("utf-8")
+    res = client.post(
+        "/api/policy/upload",
+        files={"file": ("policy_v5.99.json", pol_json, "application/json")}
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "uploaded"
+    assert data["version"] == "v5.99-test"
