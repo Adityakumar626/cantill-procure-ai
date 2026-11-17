@@ -1,6 +1,6 @@
 # ⚡ Cantill ProcureAI — Corvo Engineering Procurement Intelligence
 
-[![Test Suite](https://img.shields.io/badge/pytest-22%20passed%20%28100%25%29-brightgreen.svg)]()
+[![Test Suite](https://img.shields.io/badge/pytest-23%20passed%20%28100%25%29-brightgreen.svg)]()
 [![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)]()
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688.svg)]()
 [![Architecture](https://img.shields.io/badge/architecture-Policy--as--Data-indigo.svg)]()
@@ -182,7 +182,7 @@ Where:
 
 ## 📊 Verification & Test Coverage
 
-The test suite contains **22 automated tests** verifying every clause and endpoint:
+The test suite contains **23 automated tests** verifying every clause, endpoint, and SPA route persistence:
 
 ```bash
 .venv/bin/pytest -v
@@ -190,7 +190,7 @@ The test suite contains **22 automated tests** verifying every clause and endpoi
 
 ```text
 ============================== test session starts ==============================
-collected 22 items
+collected 23 items
 
 tests/test_api_endpoints.py::test_health_endpoint PASSED                  [  4%]
 tests/test_api_endpoints.py::test_contracts_endpoint PASSED               [  9%]
