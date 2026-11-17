@@ -1,2 +1,2 @@
-po_no,po_line,po_date,supplier_id,item_code,quantity,uom,unit_price_inr
-DEMO-PO-01,1,2026-09-15,DEMO-S01,DEMO-1001,500,LTR,175.00
+po_number,po_date,supplier_id,item_code,quantity,uom,unit_price,plant,delivered_on_time
+DEMO-PO-01,2026-09-15,DEMO-S01,DEMO-1001,500,LTR,175.00,PUN1,True

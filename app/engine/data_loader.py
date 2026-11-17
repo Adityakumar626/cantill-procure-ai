@@ -154,16 +154,20 @@ class MasterDataLoader:
         with open(self.po_history_path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
+                po_num = (row.get("po_number") or row.get("po_no") or "").strip()
+                unit_p = float(row.get("unit_price") or row.get("unit_price_inr") or 0.0)
+                plant = (row.get("plant") or "PUN1").strip()
+                delivered = (row.get("delivered_on_time", "True").strip().lower() == "true")
                 rec = POHistoryRecord(
-                    po_number=row["po_number"].strip(),
+                    po_number=po_num,
                     po_date=parse_date(row["po_date"]),
                     supplier_id=row["supplier_id"].strip(),
                     item_code=row["item_code"].strip(),
                     quantity=float(row["quantity"]),
                     uom=row["uom"].strip(),
-                    unit_price=float(row["unit_price"]),
-                    plant=row["plant"].strip(),
-                    delivered_on_time=(row["delivered_on_time"].strip().lower() == "true"),
+                    unit_price=unit_p,
+                    plant=plant,
+                    delivered_on_time=delivered,
                 )
                 self.po_history.append(rec)
         return self.po_history
