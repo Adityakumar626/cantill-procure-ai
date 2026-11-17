@@ -113,6 +113,13 @@ class Requirement:
     po_id: Optional[str] = None
     policy_version: str = "v5.0"
     reason: str = ""
+    is_approved: bool = False
+    approved_by: Optional[str] = None
+    approved_at: Optional[str] = None
+    is_overridden: bool = False
+    override_comment: Optional[str] = None
+    override_by: Optional[str] = None
+    override_at: Optional[str] = None
 
 @dataclass
 class OutputDecisionRow:

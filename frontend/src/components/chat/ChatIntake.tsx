@@ -101,9 +101,32 @@ export const ChatIntake: React.FC<ChatIntakeProps> = ({ onPRConfirmed, onShowToa
     }
   };
 
-  const handleConfirmPR = () => {
-    onShowToast('success', 'Requisition Created', `PR successfully submitted to Corvo Engine and routed to Buyer Workspace.`);
-    onPRConfirmed();
+  const handleConfirmPR = async () => {
+    if (!currentDraft) return;
+    try {
+      const formData = new FormData();
+      formData.append('description', currentDraft.item_description || 'General Item');
+      formData.append('quantity', String(currentDraft.quantity || 1));
+      formData.append('uom', currentDraft.uom || 'NOS');
+      formData.append('plant', currentDraft.plant || 'PUN1');
+      formData.append('need_by_date', currentDraft.need_by_date || new Date().toISOString().split('T')[0]);
+      formData.append('urgency', currentDraft.urgency || 'Normal');
+      if (currentDraft.resolved_item_code) {
+        formData.append('item_code', currentDraft.resolved_item_code);
+      }
+      formData.append('requester', 'Aditya Kumar (Plant Intake)');
+      formData.append('department', 'Operations');
+
+      const res = await fetch('/api/chat/confirm', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      onShowToast('success', 'Requisition Created', `Requisition ${data.pr_no || 'PR'} created and routed to Buyer Workspace.`);
+      onPRConfirmed();
+    } catch (err) {
+      onShowToast('error', 'Submission Error', 'Failed to submit requisition to engine.');
+    }
   };
 
   const samplePrompts = [

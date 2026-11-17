@@ -2,21 +2,57 @@
 Policy as Data Store & Amendment Diff Engine
 Manages versioned policies and generates plain-language diffs without code modification.
 """
+import json
+from pathlib import Path
 from datetime import date, datetime
 from typing import Dict, List, Optional, Tuple, Any
-from app.models.policy import ProcurementPolicy, PolicyRule, get_default_policy_v5
+from app.config import BASE_DIR
+from app.models.policy import ProcurementPolicy, PolicyRule, get_default_policy_v5, validate_policy
 
 class PolicyStore:
-    def __init__(self):
-        # In-memory registry of versioned policies
+    def __init__(self, storage_dir: Optional[Path] = None):
+        self.storage_dir = storage_dir or (BASE_DIR / "app" / "storage" / "policies")
+        self.storage_dir.mkdir(parents=True, exist_ok=True)
+        self.active_file = self.storage_dir.parent / "active_policy.txt"
+
         self.policies: Dict[str, ProcurementPolicy] = {}
-        # Default active policy is v5.0
+
+        # 1. Baseline Policy v5.0 always initialized
         v5 = get_default_policy_v5()
         self.policies[v5.version] = v5
         self.active_version = "v5.0"
 
+        # 2. Persist v5.0 baseline JSON if not already on disk
+        v5_json_path = self.storage_dir / "v5.0.json"
+        if not v5_json_path.exists():
+            with open(v5_json_path, "w", encoding="utf-8") as f:
+                json.dump(v5.to_dict(), f, indent=2)
+
+        # 3. Load all persisted versioned policy JSON files from disk
+        self._load_all_from_disk()
+
+        # 4. Check active_policy.txt
+        if self.active_file.exists():
+            with open(self.active_file, "r", encoding="utf-8") as f:
+                saved_active = f.read().strip()
+                if saved_active in self.policies:
+                    self.active_version = saved_active
+
+    def _load_all_from_disk(self):
+        """Scans storage directory and deserializes all versioned policies."""
+        for p_file in self.storage_dir.glob("*.json"):
+            try:
+                with open(p_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    policy = ProcurementPolicy.from_dict(data)
+                    self.policies[policy.version] = policy
+            except Exception as e:
+                pass
+
     def get_active_policy(self) -> ProcurementPolicy:
-        return self.policies.get(self.active_version, get_default_policy_v5())
+        active = self.policies.get(self.active_version, get_default_policy_v5())
+        active.sync_rules()
+        return active
 
     def get_policy_as_of_date(self, target_date: date) -> ProcurementPolicy:
         """Finds the policy version effective as of target_date."""
@@ -25,14 +61,48 @@ class PolicyStore:
             return self.get_active_policy()
         # Sort by effective_date descending
         matching.sort(key=lambda p: p.effective_date, reverse=True)
-        return matching[0]
+        policy = matching[0]
+        policy.sync_rules()
+        return policy
 
     def register_policy(self, policy: ProcurementPolicy):
+        """Registers a policy in memory and persists to disk after validation."""
+        policy.sync_rules()
+        errors = validate_policy(policy)
+        if errors:
+            raise ValueError(f"Invalid policy '{policy.version}': {'; '.join(errors)}")
         self.policies[policy.version] = policy
+        try:
+            target_path = self.storage_dir / f"{policy.version}.json"
+            with open(target_path, "w", encoding="utf-8") as f:
+                json.dump(policy.to_dict(), f, indent=2)
+        except Exception as e:
+            pass
 
     def activate_version(self, version: str):
-        if version in self.policies:
-            self.active_version = version
+        """Activates a policy version and writes active version flag to disk."""
+        if version not in self.policies:
+            target_path = self.storage_dir / f"{version}.json"
+            if target_path.exists():
+                self.load_policy_from_file(target_path)
+            else:
+                raise KeyError(
+                    f"Policy version '{version}' not found. Available versions: {list(self.policies.keys())}"
+                )
+        self.active_version = version
+        try:
+            with open(self.active_file, "w", encoding="utf-8") as f:
+                f.write(version)
+        except Exception:
+            pass
+
+    def load_policy_from_file(self, file_path: Path) -> ProcurementPolicy:
+        """Loads and registers an external policy JSON file."""
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        policy = ProcurementPolicy.from_dict(data)
+        self.register_policy(policy)
+        return policy
 
     def compute_policy_diff(self, new_policy: ProcurementPolicy) -> List[str]:
         """Generates plain-language explanation of what changes between active policy and new_policy."""

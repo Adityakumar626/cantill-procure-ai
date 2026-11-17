@@ -72,6 +72,27 @@ class MasterDataLoader:
         self.load_contracts()
         self.augment_pdf_contracts()
 
+    def load_synthetic_demo_data(self):
+        """Loads non-confidential synthetic demo master data for cloud inspection when task data is absent."""
+        demo_dir = Path(__file__).resolve().parent.parent / "demo_data"
+        if not demo_dir.exists():
+            return
+        demo_loader = MasterDataLoader(
+            plants_path=demo_dir / "master_data" / "plants.csv",
+            suppliers_path=demo_dir / "master_data" / "supplier_master.csv",
+            items_path=demo_dir / "master_data" / "item_master.csv",
+            po_history_path=demo_dir / "master_data" / "po_history.csv",
+            contract_register_path=demo_dir / "contracts" / "contract_register.csv",
+            contract_lines_path=demo_dir / "contracts" / "contract_lines.csv",
+            pdf_contracts_dir=demo_dir / "contracts" / "pdf"
+        )
+        demo_loader.load_all()
+        self.plants = demo_loader.plants
+        self.suppliers = demo_loader.suppliers
+        self.items = demo_loader.items
+        self.po_history = demo_loader.po_history
+        self.contracts = demo_loader.contracts
+
     def load_plants(self) -> Dict[str, Plant]:
         self.plants = {}
         if not self.plants_path.exists():

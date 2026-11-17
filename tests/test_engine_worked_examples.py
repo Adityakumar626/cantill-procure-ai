@@ -289,6 +289,52 @@ def test_example_6_same_item_different_plants_not_clubbed(pipeline):
         assert r.supplier_id == "S027"
         assert round(r.unit_price) == 22
 
+def test_example_14_po_consolidation(pipeline):
+    """
+    Worked Example 14: Several requirements on one PO.
+    Lines PR-26-00034/1, PR-26-00032/1, PR-26-00031/1, PR-26-00035/1.
+    Requirements for same supplier (S007), plant (PUN1), route (CONTRACT_PO),
+    raised within 24 hours of first requirement on that PO, are placed as one PO with several lines.
+    """
+    l34 = PRLine(
+        pr_no="PR-26-00034", pr_line=1, created_at=datetime(2026, 11, 2, 14, 5),
+        requester="R1", department="D1", plant="PUN1", item_code="ITM-1009",
+        description="Hex bolt M10x40 GR 8.8", quantity=3920.0, uom="NOS",
+        estimated_unit_price=None, need_by_date=date(2026, 11, 25), urgency="Normal"
+    )
+    l31 = PRLine(
+        pr_no="PR-26-00031", pr_line=1, created_at=datetime(2026, 11, 3, 10, 30),
+        requester="R2", department="D2", plant="PUN1", item_code="ITM-1009",
+        description="Hex bolt M10x40 GR 8.8", quantity=1140.0, uom="NOS",
+        estimated_unit_price=None, need_by_date=date(2026, 11, 12), urgency="Normal"
+    )
+    l35 = PRLine(
+        pr_no="PR-26-00035", pr_line=1, created_at=datetime(2026, 11, 8, 10, 5),
+        requester="R3", department="D3", plant="PUN1", item_code="ITM-1009",
+        description="Hex bolt M10x40 GR 8.8", quantity=2150.0, uom="NOS",
+        estimated_unit_price=None, need_by_date=date(2026, 11, 17), urgency="Normal"
+    )
+    l32 = PRLine(
+        pr_no="PR-26-00032", pr_line=1, created_at=datetime(2026, 11, 9, 18, 10),
+        requester="R4", department="D4", plant="PUN1", item_code="ITM-1009",
+        description="Hex bolt M10x40 GR 8.8", quantity=690.0, uom="NOS",
+        estimated_unit_price=None, need_by_date=date(2026, 11, 29), urgency="Normal"
+    )
+
+    reqs, rows = pipeline.process_pr_lines([l34, l31, l35, l32])
+    # PR-34 and PR-32 club together (REQ 1: need-by 11-25 and 11-29 are 4 days apart <= 7)
+    # PR-31 and PR-35 club together (REQ 2: need-by 11-12 and 11-17 are 5 days apart <= 7)
+    assert len(reqs) == 2
+    for r in reqs:
+        assert r.decision == "PO"
+        assert r.route == "CONTRACT_PO"
+        assert r.supplier_id == "S007"
+        assert round(r.unit_price, 2) == 7.06
+    
+    # Both requirements must share the exact same PO number (PO consolidation)
+    assert reqs[0].po_id != ""
+    assert reqs[0].po_id == reqs[1].po_id
+
 def test_preferred_supplier_rankings_page_5(pipeline):
     # Test preferred supplier rankings from Page 5 of Worked Examples as of 2026-11-01
     ranker = pipeline.supplier_ranker

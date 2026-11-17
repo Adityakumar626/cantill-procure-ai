@@ -8,6 +8,7 @@ import {
   ChevronRight,
   ShieldAlert,
   UserCheck,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface BuyerWorkspaceProps {
@@ -103,6 +104,36 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
     }
   };
 
+  const handleApprove = async (groupId: string) => {
+    try {
+      const formData = new FormData();
+      formData.append('group_id', groupId);
+      formData.append('buyer_name', buyerSignature);
+      await fetch('/api/approve', {
+        method: 'POST',
+        body: formData,
+      });
+      onReloadSample();
+    } catch (err) {
+      console.error('Approval failed', err);
+    }
+  };
+
+  const handleApproveAll = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('group_id', 'ALL');
+      formData.append('buyer_name', buyerSignature);
+      await fetch('/api/approve', {
+        method: 'POST',
+        body: formData,
+      });
+      onReloadSample();
+    } catch (err) {
+      console.error('Approve all failed', err);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden p-6 gap-4 bg-[#F5F6F8]">
       {/* Page Title & Action */}
@@ -112,13 +143,22 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
             Buyer Workspace
           </h1>
         </div>
-        <button
-          onClick={onReloadSample}
-          className="flex items-center gap-1.5 h-8 px-3 text-xs font-medium text-[#202B38] bg-white hover:bg-[#F5F6F8] border border-[#CAD0D8] rounded-[4px] transition-colors shadow-2xs"
-        >
-          <RotateCcw className="w-3.5 h-3.5 text-[#687586]" />
-          <span>Reload Sample</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleApproveAll}
+            className="flex items-center gap-1.5 h-8 px-3 text-xs font-semibold text-white bg-[#16845B] hover:bg-[#126B49] rounded-[4px] transition-colors shadow-2xs"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>Approve All Decisions</span>
+          </button>
+          <button
+            onClick={onReloadSample}
+            className="flex items-center gap-1.5 h-8 px-3 text-xs font-medium text-[#202B38] bg-white hover:bg-[#F5F6F8] border border-[#CAD0D8] rounded-[4px] transition-colors shadow-2xs"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-[#687586]" />
+            <span>Reload Sample</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Summary Strip (Compact, High Density) */}
@@ -345,13 +385,31 @@ export const BuyerWorkspace: React.FC<BuyerWorkspaceProps> = ({
                         </td>
 
                         {/* Action */}
-                        <td className="py-2 px-2.5 text-right">
-                          <button
-                            onClick={() => handleOpenOverride(req)}
-                            className="h-7 px-2 text-[11px] font-medium bg-white hover:bg-[#F5F6F8] text-[#202B38] border border-[#CAD0D8] rounded-[3px] transition-colors"
-                          >
-                            Override
-                          </button>
+                        <td className="py-2 px-2.5 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {req.is_approved ? (
+                              <span
+                                className="px-2 py-0.5 text-[10px] font-semibold bg-[#E8F5EE] text-[#16845B] border border-[#B6E2CC] rounded flex items-center gap-1"
+                                title={`Approved by ${req.approved_by || 'Buyer'} at ${req.approved_at || ''}`}
+                              >
+                                <span>✓</span>
+                                <span>Approved</span>
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleApprove(req.group_id)}
+                                className="h-7 px-2 text-[11px] font-semibold bg-[#16845B] hover:bg-[#126B49] text-white rounded-[3px] transition-colors"
+                              >
+                                Approve
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleOpenOverride(req)}
+                              className="h-7 px-2 text-[11px] font-medium bg-white hover:bg-[#F5F6F8] text-[#202B38] border border-[#CAD0D8] rounded-[3px] transition-colors"
+                            >
+                              Override
+                            </button>
+                          </div>
                         </td>
                       </tr>
 

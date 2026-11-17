@@ -1,0 +1,2 @@
+contract_id,supplier_id,supplier_name,start_date,end_date,value_cap,consumed_value
+DEMO-RC-01,DEMO-S01,Demo Precision Parts,2026-04-01,2027-03-31,500000,100000

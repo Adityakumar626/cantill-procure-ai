@@ -2,14 +2,15 @@
 Clause 4: Contract Applicability & Ceiling Management Engine
 Tracks contract eligibility, ceiling consumption, and lowest rate selection.
 """
+import copy
 from typing import Dict, List, Optional, Tuple
 from datetime import date
 from app.models.procurement import Contract, Supplier
 
 class ContractManager:
     def __init__(self, contracts: Dict[str, Contract], suppliers: Dict[str, Supplier]):
-        # Keep a fresh copy of contracts with their baseline consumed values
-        self.contracts = contracts
+        # Keep an isolated deep copy of contracts so ceiling consumption does not mutate master data in-place
+        self.contracts = {k: copy.deepcopy(v) for k, v in contracts.items()}
         self.suppliers = suppliers
 
     def get_applicable_contracts(self, item_code: str, req_date: date) -> List[Contract]:

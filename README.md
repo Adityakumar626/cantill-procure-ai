@@ -1,6 +1,6 @@
 # ⚡ Cantill ProcureAI — Corvo Engineering Procurement Intelligence
 
-[![Test Suite](https://img.shields.io/badge/pytest-23%20passed%20%28100%25%29-brightgreen.svg)]()
+[![Test Suite](https://img.shields.io/badge/pytest-44%20passed%20%28100%25%29-brightgreen.svg)]()
 [![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)]()
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688.svg)]()
 [![Architecture](https://img.shields.io/badge/architecture-Policy--as--Data-indigo.svg)]()
@@ -182,7 +182,7 @@ Where:
 
 ## 📊 Verification & Test Coverage
 
-The test suite contains **23 automated tests** verifying every clause, endpoint, and SPA route persistence:
+The test suite contains **44 automated tests** verifying every clause, endpoint, adversarial boundary, SPA route persistence, and runtime policy synchronization:
 
 ```bash
 .venv/bin/pytest -v
@@ -190,38 +190,24 @@ The test suite contains **23 automated tests** verifying every clause, endpoint,
 
 ```text
 ============================== test session starts ==============================
-collected 23 items
+collected 44 items
 
-tests/test_api_endpoints.py::test_health_endpoint PASSED                  [  4%]
-tests/test_api_endpoints.py::test_contracts_endpoint PASSED               [  9%]
-tests/test_api_endpoints.py::test_preferred_suppliers_endpoints PASSED    [ 13%]
-tests/test_api_endpoints.py::test_process_batch_and_export PASSED         [ 18%]
-tests/test_api_endpoints.py::test_buyer_override_endpoint PASSED          [ 22%]
-tests/test_api_endpoints.py::test_policy_amendment_and_activation PASSED  [ 27%]
-tests/test_api_endpoints.py::test_chat_intake_assistant PASSED            [ 31%]
-tests/test_data_loaders.py::test_data_loader_counts PASSED                [ 36%]
-tests/test_engine_worked_examples.py::test_example_1_nitrile_gloves PASSED [ 40%]
-tests/test_engine_worked_examples.py::test_example_2_ms_angles PASSED     [ 45%]
-tests/test_example_3_welding_rods PASSED                                  [ 50%]
-tests/test_example_4_safety_shoes PASSED                                  [ 54%]
-tests/test_example_5_lubricants PASSED                                    [ 59%]
-tests/test_example_6_circuit_breakers PASSED                              [ 63%]
-tests/test_example_7_fasteners PASSED                                     [ 68%]
-tests/test_example_8_forklift_rental PASSED                               [ 72%]
-tests/test_example_9_bearing_6205 PASSED                                  [ 77%]
-tests/test_example_10_emergency_gloves PASSED                             [ 81%]
-tests/test_example_11_unproven_sensors PASSED                             [ 86%]
-tests/test_example_12_capex_cnc PASSED                                    [ 90%]
-tests/test_example_13_new_item_conveyor PASSED                            [ 95%]
-tests/test_example_14_po_consolidation PASSED                             [100%]
+tests/test_adversarial_and_edge_cases.py (11 tests) .............. PASSED [ 25%]
+tests/test_api_endpoints.py (11 tests) ........................... PASSED [ 50%]
+tests/test_data_loaders.py (1 test) .............................. PASSED [ 52%]
+tests/test_engine_worked_examples.py (15 tests) .................. PASSED [ 86%]
+tests/test_policy_synchronization_regression.py (6 tests) ........ PASSED [100%]
 
-============================== 22 passed in 3.12s ==============================
+============================== 44 passed in 6.26s ==============================
 ```
 
 ---
 
 ## 📑 Documentation Links
 
+- **Engineering Audit**: [`ENGINEERING_AUDIT.md`](ENGINEERING_AUDIT.md)
+- **Independent Readiness Report**: [`FINAL_READINESS_REPORT.md`](FINAL_READINESS_REPORT.md)
+- **Policy Rule Synchronization Report**: [`FINAL_FIX_REPORT.md`](FINAL_FIX_REPORT.md)
 - **Architectural & Policy Decisions**: [`docs/DECISIONS.md`](docs/DECISIONS.md)
 - **Detailed System Architecture**: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - **Methodology & AI Declaration**: [`docs/APPROACH.md`](docs/APPROACH.md)

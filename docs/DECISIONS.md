@@ -35,8 +35,17 @@ The policy specifies that ranking must consider:
 4. **On-Time Delivery**: Percentage from `supplier_master` (e.g., $81\% = 0.81$).
 5. **Quality Score**: Rating out of $5.0$ from `supplier_master` (normalized: $\text{quality} / 5.0$).
 
-### Mathematical Ranking Composite Score:
-$$\text{Score} = (0.35 \times \text{Recency}) + (0.25 \times \text{ContractHeld}) + \left(0.20 \times \min\left(1.0, \frac{\text{pos\_548d}}{5}\right)\right) + (0.10 \times \text{OnTime}) + \left(0.10 \times \frac{\text{Quality}}{5.0}\right)$$
+### Mathematical Ranking Composite Score (Configurable in Policy):
+$$\text{Score} = (40.0 \times \text{Recency}) + (15.0 \times \text{ContractHeld}) + (5.0 \times \min(\text{pos\_548d}, 10)) + \left(10.0 \times \frac{\text{OnTime}}{100.0}\right) + \left(10.0 \times \frac{\text{Quality}}{5.0}\right)$$
+
+Where:
+- $\text{Recency}$: $1.0$ if last PO $\le 90$ days; $0.5$ if last PO $\le 365$ days; $0.0$ if older.
+- $\text{ContractHeld}$: $1.0$ if active contract held as of requirement date, else $0.0$.
+- $\text{pos\_548d}$: Count of POs awarded to supplier for this item in the 548-day window (capped at 10).
+- $\text{OnTime}$: Percentage on-time delivery from supplier master ($0$ to $100$).
+- $\text{Quality}$: Quality rating from supplier master ($0.0$ to $5.0$).
+- Ties are broken deterministically by `pos_548d` descending, then `recency` descending.
+- Weights are defined in policy data (`ranking_weights`), allowing amendments without code changes.
 
 ### Verification against `Worked_Examples.pdf` (Page 5):
 1. **`ITM-1048` (Nitrile coated gloves)**:

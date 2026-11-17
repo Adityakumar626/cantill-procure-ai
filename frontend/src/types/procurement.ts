@@ -35,6 +35,11 @@ export interface Requirement {
   suggested_suppliers: string[];
   po_id?: string | null;
   reason: string;
+  is_approved?: boolean;
+  approved_by?: string;
+  approved_at?: string;
+  is_overridden?: boolean;
+  override_comment?: string;
   lines_count: number;
   lines?: ConstituentPRLine[];
 }
@@ -45,6 +50,7 @@ export interface SummaryKPIs {
   direct_pos: number;
   sourcing_requests: number;
   total_spend_inr: number;
+  approved_count?: number;
   active_policy: string;
 }
 

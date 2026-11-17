@@ -1,0 +1,4 @@
+item_code,description,category,uom,item_type,standard_price
+DEMO-1001,Synthetic Hydraulic Oil 68,Hydraulics & Pneumatics,LTR,Material,180.00
+DEMO-1002,Synthetic Hex Bolt M10,Hardware,NOS,Material,8.00
+DEMO-1003,Synthetic CNC Milling Machine,Machinery,NOS,Capex,5000000.00

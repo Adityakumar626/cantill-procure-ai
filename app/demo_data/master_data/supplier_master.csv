@@ -1,0 +1,3 @@
+supplier_id,name,city,categories,status,on_time_pct,quality_rating
+DEMO-S01,Demo Precision Parts,Pune,Hardware;Hydraulics & Pneumatics,Active,92.0,4.6
+DEMO-S02,Demo Industrial Supplies,Chakan,Hardware;Machinery,Active,88.0,4.2

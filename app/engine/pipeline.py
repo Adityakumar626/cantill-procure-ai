@@ -37,7 +37,8 @@ class ProcurementPipeline:
             self.loader.items,
             self.loader.po_history,
             self.contract_manager.contracts,
-            history_window_days=self.policy.preferred_history_days
+            history_window_days=self.policy.preferred_history_days,
+            ranking_weights=self.policy.ranking_weights
         )
         self.rule_engine = RuleEngine(
             self.policy,

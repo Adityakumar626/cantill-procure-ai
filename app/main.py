@@ -8,18 +8,19 @@ import io
 from pathlib import Path
 from datetime import datetime, date
 from typing import List, Optional, Dict, Any
-from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException, Response
+from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException, Response, Header, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import SAMPLE_PR_BATCH_CSV, ACTIVE_POLICY_VERSION, GEMINI_API_KEY, GEMINI_MODEL
-from app.models.procurement import PRLine, OutputDecisionRow
-from app.models.policy import ProcurementPolicy, PolicyRule
+from app.models.procurement import PRLine, OutputDecisionRow, Contract, ContractLine
+from app.models.policy import ProcurementPolicy, PolicyRule, synchronize_policy_amendment, validate_policy
 from app.engine.data_loader import MasterDataLoader, parse_datetime, parse_date
 from app.engine.pipeline import ProcurementPipeline
 from app.policy_manager.store import PolicyStore
 from app.assistant.chat import ChatIntakeAssistant
+from app.storage_manager import storage_manager
 
 app = FastAPI(
     title="Cantill ProcureAI",
@@ -27,11 +28,22 @@ app = FastAPI(
     version="1.0.0"
 )
 
+ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "")
+
+def verify_admin_access(x_admin_key: Optional[str] = None):
+    if ADMIN_API_KEY and x_admin_key != ADMIN_API_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid or missing x-admin-key header.")
+
+ALLOWED_ORIGINS = os.environ.get(
+    "ALLOWED_ORIGINS",
+    "http://localhost:3000,http://localhost:5173,http://localhost:8000,http://127.0.0.1:8000,http://127.0.0.1:5173,https://cantill-procure-ai.onrender.com"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[orig.strip() for orig in ALLOWED_ORIGINS if orig.strip()],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -43,6 +55,7 @@ class AppState:
         self.policy_store = PolicyStore()
         self.pipeline = ProcurementPipeline(self.loader, self.policy_store.get_active_policy())
         self.chat_assistant = ChatIntakeAssistant(self.pipeline.matcher, self.loader.items)
+        self.storage = storage_manager
         self.last_processed_rows: List[OutputDecisionRow] = []
 
 state = AppState()
@@ -74,13 +87,28 @@ async def serve_spa_page():
 @app.get("/health")
 async def health_check():
     has_gemini = bool(os.environ.get("GEMINI_API_KEY") or GEMINI_API_KEY)
+    items_cnt = len(state.loader.items)
     return {
         "status": "online",
         "active_policy": state.policy_store.active_version,
-        "items_count": len(state.loader.items),
+        "items_count": items_cnt,
         "contracts_count": len(state.loader.contracts),
         "suppliers_count": len(state.loader.suppliers),
+        "master_data_status": "loaded" if items_cnt > 0 else "empty_or_uninitialized",
         "llm_mode": "gemini_2.0_flash" if has_gemini else "offline_deterministic"
+    }
+
+@app.post("/api/admin/initialize-demo-data")
+async def initialize_demo_data(x_admin_key: Optional[str] = Header(None)):
+    verify_admin_access(x_admin_key)
+    state.loader.load_synthetic_demo_data()
+    state.pipeline = ProcurementPipeline(state.loader, state.policy_store.get_active_policy())
+    return {
+        "status": "success",
+        "message": "Synthetic demo master data loaded successfully.",
+        "items_count": len(state.loader.items),
+        "suppliers_count": len(state.loader.suppliers),
+        "contracts_count": len(state.loader.contracts)
     }
 
 # --- Batch Processing Endpoints ---
@@ -125,12 +153,92 @@ async def process_batch(file: Optional[UploadFile] = File(None)):
             content = f.read()
 
     pr_lines = parse_pr_csv(content)
+
+    # Ingest any confirmed chat requisitions from persistent storage
+    chat_prs = storage_manager.load_chat_prs()
+    for cp in chat_prs:
+        pr_lines.append(PRLine(
+            pr_no=cp["pr_no"],
+            pr_line=int(cp.get("pr_line", 1)),
+            created_at=parse_datetime(cp["created_at"]),
+            requester=cp.get("requester", "Chat Requester").strip(),
+            department=cp.get("department", "Manufacturing").strip(),
+            plant=cp["plant"].strip(),
+            item_code=cp.get("item_code", "").strip() or None,
+            description=cp["description"].strip(),
+            quantity=float(cp["quantity"]),
+            uom=cp.get("uom", "NOS").strip(),
+            estimated_unit_price=float(cp["estimated_unit_price"]) if cp.get("estimated_unit_price") else None,
+            need_by_date=parse_date(cp["need_by_date"]),
+            urgency=cp.get("urgency", "Normal").strip()
+        ))
+
     # Re-initialize pipeline with active policy and fresh baseline contracts
     state.loader.load_contracts()
     state.loader.augment_pdf_contracts()
+
+    # Load custom registered contracts
+    custom_contracts = storage_manager.load_custom_contracts()
+    for cc in custom_contracts:
+        lines_dict = {}
+        for l in cc.get("lines", []):
+            lines_dict[l["item_code"]] = ContractLine(
+                contract_id=cc["contract_id"],
+                item_code=l["item_code"],
+                description=l.get("description", ""),
+                uom=l.get("uom", "NOS"),
+                rate=float(l["rate"])
+            )
+        contract_obj = Contract(
+            contract_id=cc["contract_id"],
+            supplier_id=cc["supplier_id"],
+            supplier_name=cc.get("supplier_name", cc["supplier_id"]),
+            start_date=parse_date(cc["start_date"]),
+            end_date=parse_date(cc["end_date"]),
+            value_cap=float(cc["value_cap"]),
+            consumed_value=float(cc.get("consumed_value", 0.0)),
+            lines=lines_dict
+        )
+        state.loader.contracts[contract_obj.contract_id] = contract_obj
+
     pipeline = ProcurementPipeline(state.loader, state.policy_store.get_active_policy())
 
     reqs, output_rows = pipeline.process_pr_lines(pr_lines)
+
+    # Re-apply persistent buyer overrides and approvals (Clause 8.1 compliance)
+    overrides = storage_manager.load_overrides()
+    approvals = storage_manager.load_approvals()
+
+    for r in reqs:
+        if r.group_id in overrides:
+            ov = overrides[r.group_id]
+            r.route = ov["new_route"]
+            r.decision = ov["new_decision"]
+            r.reason = f"[BUYER OVERRIDE by {ov['buyer_name']} at {ov['timestamp']}]: {ov['comment']} (Original: {r.reason})"
+            r.is_overridden = True
+            r.override_comment = ov["comment"]
+            r.override_by = ov["buyer_name"]
+            r.override_at = ov["timestamp"]
+        else:
+            r.is_overridden = False
+
+        if r.group_id in approvals or "ALL" in approvals:
+            ap = approvals.get(r.group_id, approvals.get("ALL", {}))
+            r.is_approved = True
+            r.approved_by = ap.get("buyer_name", "Aditya Kumar")
+            r.approved_at = ap.get("timestamp", "")
+        else:
+            r.is_approved = False
+            r.approved_by = None
+            r.approved_at = None
+
+    for row in output_rows:
+        if row.group_id in overrides:
+            ov = overrides[row.group_id]
+            row.route = ov["new_route"]
+            row.decision = ov["new_decision"]
+            row.reason = f"[BUYER OVERRIDE by {ov['buyer_name']} at {ov['timestamp']}]: {ov['comment']} (Original: {row.reason})"
+
     state.last_processed_rows = output_rows
 
     # Calculate summary metrics
@@ -140,6 +248,7 @@ async def process_batch(file: Optional[UploadFile] = File(None)):
         "direct_pos": sum(1 for r in reqs if r.decision == "PO"),
         "sourcing_requests": sum(1 for r in reqs if r.decision == "SOURCING_REQUEST"),
         "total_spend_inr": sum(r.group_value_inr for r in reqs if r.decision == "PO"),
+        "approved_count": sum(1 for r in reqs if r.is_approved),
         "active_policy": state.policy_store.active_version,
     }
 
@@ -160,6 +269,11 @@ async def process_batch(file: Optional[UploadFile] = File(None)):
                 "suggested_suppliers": r.suggested_supplier_ids,
                 "po_id": r.po_id,
                 "reason": r.reason,
+                "is_approved": r.is_approved,
+                "approved_by": r.approved_by,
+                "approved_at": r.approved_at,
+                "is_overridden": r.is_overridden,
+                "override_comment": r.override_comment,
                 "lines_count": len(r.lines),
                 "lines": [
                     {
@@ -257,71 +371,138 @@ async def get_preferred_suppliers(
 
 @app.post("/api/policy/amend")
 async def amend_policy(
+    request: Request,
     spot_po_limit: Optional[float] = Form(None),
     emergency_po_limit: Optional[float] = Form(None),
     rfq_limit: Optional[float] = Form(None),
-    new_version_name: str = Form("v5.1"),
-    effective_date_str: str = Form("2026-11-19")
+    new_version_name: Optional[str] = Form(None),
+    effective_date_str: Optional[str] = Form(None)
 ):
     """
     Previews or drafts an amendment to the active policy.
     Returns the natural-language diff preview.
     """
-    active = state.policy_store.get_active_policy()
-    eff_date = parse_date(effective_date_str)
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            spot_po_limit = body.get("spot_po_limit", spot_po_limit)
+            emergency_po_limit = body.get("emergency_po_limit", emergency_po_limit)
+            rfq_limit = body.get("rfq_limit", rfq_limit)
+            new_version_name = body.get("new_version_name", new_version_name)
+            effective_date_str = body.get("effective_date_str", effective_date_str)
+        except Exception:
+            pass
 
-    # Clone active policy into new version
-    new_policy = ProcurementPolicy(
-        version=new_version_name,
-        effective_date=eff_date,
-        clubbing_window_days=active.clubbing_window_days,
-        need_by_window_days=active.need_by_window_days,
-        emergency_po_limit=emergency_po_limit if emergency_po_limit is not None else active.emergency_po_limit,
-        spot_po_limit=spot_po_limit if spot_po_limit is not None else active.spot_po_limit,
-        rfq_limit=rfq_limit if rfq_limit is not None else active.rfq_limit,
-        active_history_days=active.active_history_days,
-        preferred_history_days=active.preferred_history_days,
-        po_consolidation_window_hours=active.po_consolidation_window_hours,
-        rules=[r for r in active.rules]
-    )
+    ver_name = str(new_version_name or "v5.1").strip()
+    eff_str = str(effective_date_str or "2026-11-19").strip()
+    active = state.policy_store.get_active_policy()
+
+    try:
+        new_policy = synchronize_policy_amendment(
+            base_policy=active,
+            version=ver_name,
+            effective_date=parse_date(eff_str),
+            spot_po_limit=spot_po_limit,
+            emergency_po_limit=emergency_po_limit,
+            rfq_limit=rfq_limit,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     diff = state.policy_store.compute_policy_diff(new_policy)
     return {
         "status": "preview",
-        "new_version": new_version_name,
-        "effective_date": effective_date_str,
+        "new_version": ver_name,
+        "effective_date": eff_str,
         "changes": diff,
         "ready_to_activate": True
     }
 
 @app.post("/api/policy/activate")
 async def activate_policy(
+    request: Request,
     spot_po_limit: Optional[float] = Form(None),
     emergency_po_limit: Optional[float] = Form(None),
     rfq_limit: Optional[float] = Form(None),
-    version_name: str = Form("v5.1"),
-    effective_date_str: str = Form("2026-11-19")
+    version_name: Optional[str] = Form(None),
+    effective_date_str: Optional[str] = Form(None),
+    x_admin_key: Optional[str] = Header(None)
 ):
-    """Activates the new policy version hot in memory without restarting."""
+    """Activates the new policy version hot in memory and persists to disk."""
+    verify_admin_access(x_admin_key)
+
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            spot_po_limit = body.get("spot_po_limit", spot_po_limit)
+            emergency_po_limit = body.get("emergency_po_limit", emergency_po_limit)
+            rfq_limit = body.get("rfq_limit", rfq_limit)
+            version_name = body.get("version_name", version_name)
+            effective_date_str = body.get("effective_date_str", effective_date_str)
+        except Exception:
+            pass
+
+    ver_name = str(version_name or "v5.1").strip()
+    eff_str = str(effective_date_str or "2026-11-19").strip()
     active = state.policy_store.get_active_policy()
-    new_policy = ProcurementPolicy(
-        version=version_name,
-        effective_date=parse_date(effective_date_str),
-        emergency_po_limit=emergency_po_limit if emergency_po_limit is not None else active.emergency_po_limit,
-        spot_po_limit=spot_po_limit if spot_po_limit is not None else active.spot_po_limit,
-        rfq_limit=rfq_limit if rfq_limit is not None else active.rfq_limit,
-        rules=[r for r in active.rules]
-    )
-    state.policy_store.register_policy(new_policy)
-    state.policy_store.activate_version(version_name)
-    # Refresh pipeline
-    state.pipeline = ProcurementPipeline(state.loader, new_policy)
+
+    # If any scalar limits were explicitly supplied, perform a synchronized amendment
+    if spot_po_limit is not None or emergency_po_limit is not None or rfq_limit is not None:
+        try:
+            new_policy = synchronize_policy_amendment(
+                base_policy=active,
+                version=ver_name,
+                effective_date=parse_date(eff_str),
+                spot_po_limit=spot_po_limit,
+                emergency_po_limit=emergency_po_limit,
+                rfq_limit=rfq_limit,
+            )
+            state.policy_store.register_policy(new_policy)
+            state.policy_store.activate_version(ver_name)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+    else:
+        # Activating an existing registered policy version by name
+        try:
+            state.policy_store.activate_version(ver_name)
+        except (KeyError, ValueError) as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    # Synchronize pipeline with newly activated policy
+    active_policy = state.policy_store.get_active_policy()
+    state.pipeline = ProcurementPipeline(state.loader, active_policy)
 
     return {
         "status": "activated",
         "active_version": state.policy_store.active_version,
-        "effective_date": effective_date_str,
-        "message": f"Policy {version_name} is now actively driving all procurement decisions."
+        "effective_date": eff_str,
+        "message": f"Policy {state.policy_store.active_version} is now actively driving all procurement decisions."
+    }
+
+@app.post("/api/policy/upload")
+async def upload_policy_document(file: UploadFile = File(...)):
+    """Uploads a versioned policy JSON file and validates it before registration."""
+    content = await file.read()
+    try:
+        data = json.loads(content.decode("utf-8"))
+        policy = ProcurementPolicy.from_dict(data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid policy JSON schema: {e}")
+
+    try:
+        state.policy_store.register_policy(policy)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    diff = state.policy_store.compute_policy_diff(policy)
+    return {
+        "status": "uploaded",
+        "version": policy.version,
+        "effective_date": policy.effective_date.strftime("%Y-%m-%d"),
+        "changes": diff,
+        "message": f"Policy {policy.version} validated and registered. Ready to activate."
     }
 
 # --- Conversational Intake Endpoint ---
@@ -373,7 +554,125 @@ async def list_contracts():
         })
     return {"contracts": contracts_list}
 
-# --- Buyer Decision Override Endpoint ---
+@app.post("/api/contracts/upload-pdf")
+async def upload_pdf_contract(file: UploadFile = File(...)):
+    """Uploads and parses a PDF rate contract into the live ceiling engine."""
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only PDF contracts are supported.")
+    
+    upload_dir = Path("app/storage/pdf_contracts")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    dest_path = upload_dir / file.filename
+    content = await file.read()
+    with open(dest_path, "wb") as f:
+        f.write(content)
+
+    contract = state.loader.parse_pdf_contract(dest_path)
+    if not contract:
+        raise HTTPException(status_code=400, detail="Could not parse contract details from PDF.")
+
+    state.loader.contracts[contract.contract_id] = contract
+    # Persist as custom contract
+    lines_list = [
+        {"item_code": cl.item_code, "description": cl.description, "uom": cl.uom, "rate": cl.rate}
+        for cl in contract.lines.values()
+    ]
+    storage_manager.save_custom_contract({
+        "contract_id": contract.contract_id,
+        "supplier_id": contract.supplier_id,
+        "supplier_name": contract.supplier_name,
+        "start_date": contract.start_date.strftime("%Y-%m-%d"),
+        "end_date": contract.end_date.strftime("%Y-%m-%d"),
+        "value_cap": contract.value_cap,
+        "consumed_value": contract.consumed_value,
+        "lines": lines_list
+    })
+
+    return {
+        "status": "success",
+        "contract_id": contract.contract_id,
+        "supplier_id": contract.supplier_id,
+        "supplier_name": contract.supplier_name,
+        "value_cap": contract.value_cap,
+        "lines_count": len(contract.lines),
+        "message": f"Contract {contract.contract_id} uploaded and activated into ceiling engine."
+    }
+
+@app.post("/api/contracts/manual")
+async def register_manual_contract(
+    contract_id: str = Form(...),
+    supplier_id: str = Form(...),
+    start_date: str = Form("2026-11-01"),
+    end_date: str = Form("2027-10-31"),
+    value_cap: float = Form(...)
+):
+    """Manually registers a rate contract into the live ceiling engine."""
+    supp = state.loader.suppliers.get(supplier_id)
+    supp_name = supp.name if supp else supplier_id
+    contract_obj = Contract(
+        contract_id=contract_id.strip(),
+        supplier_id=supplier_id.strip(),
+        supplier_name=supp_name,
+        start_date=parse_date(start_date),
+        end_date=parse_date(end_date),
+        value_cap=float(value_cap),
+        consumed_value=0.0,
+        lines={}
+    )
+    state.loader.contracts[contract_obj.contract_id] = contract_obj
+    storage_manager.save_custom_contract({
+        "contract_id": contract_obj.contract_id,
+        "supplier_id": contract_obj.supplier_id,
+        "supplier_name": contract_obj.supplier_name,
+        "start_date": start_date,
+        "end_date": end_date,
+        "value_cap": float(value_cap),
+        "consumed_value": 0.0,
+        "lines": []
+    })
+    return {
+        "status": "success",
+        "contract_id": contract_id,
+        "message": f"Contract {contract_id} manually registered into ceiling engine."
+    }
+
+# --- Conversational Intake Confirmation Endpoint ---
+
+@app.post("/api/chat/confirm")
+async def confirm_chat_pr(
+    description: str = Form(...),
+    quantity: float = Form(...),
+    uom: str = Form("NOS"),
+    plant: str = Form("PUN1"),
+    need_by_date: str = Form(...),
+    urgency: str = Form("Normal"),
+    item_code: Optional[str] = Form(None),
+    requester: str = Form("Employee (Chat)"),
+    department: str = Form("Manufacturing"),
+    estimated_unit_price: Optional[float] = Form(None)
+):
+    """Confirms a chat-created PR and stores it persistently so it enters the Buyer Workspace."""
+    pr_record = {
+        "item_code": item_code.strip() if item_code and item_code.strip() else None,
+        "description": description.strip(),
+        "quantity": float(quantity),
+        "uom": uom.strip(),
+        "plant": plant.strip(),
+        "need_by_date": need_by_date.strip(),
+        "urgency": urgency.strip(),
+        "requester": requester.strip(),
+        "department": department.strip(),
+        "estimated_unit_price": float(estimated_unit_price) if estimated_unit_price else None,
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+    }
+    saved_pr = storage_manager.save_chat_pr(pr_record)
+    return {
+        "status": "success",
+        "pr_no": saved_pr["pr_no"],
+        "message": f"Requisition {saved_pr['pr_no']} created and routed to Buyer Workspace."
+    }
+
+# --- Buyer Decision Override & Approval Endpoints ---
 
 @app.post("/api/override")
 async def override_decision(
@@ -383,16 +682,26 @@ async def override_decision(
     buyer_name: str = Form("Aditya Kumar")
 ):
     """
-    Records a human buyer override with mandatory audit trail.
-    Updates the route and policy reason in the current run results.
+    Clause 8.1: Records a human buyer override with mandatory audit trail.
+    Persists to disk so reloads and subsequent batches preserve the justification.
     """
     if not comment or not comment.strip():
         raise HTTPException(status_code=400, detail="Mandatory written comment required for audit compliance.")
 
-    updated_count = 0
     new_decision = "PO" if "PO" in new_route else "SOURCING_REQUEST"
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
 
+    # Persist override to disk
+    storage_manager.save_override(
+        group_id=group_id,
+        new_route=new_route,
+        new_decision=new_decision,
+        comment=comment.strip(),
+        buyer_name=buyer_name.strip(),
+        timestamp=timestamp
+    )
+
+    updated_count = 0
     for row in state.last_processed_rows:
         if row.group_id == group_id:
             row.route = new_route
@@ -406,7 +715,26 @@ async def override_decision(
         "new_route": new_route,
         "new_decision": new_decision,
         "updated_rows": updated_count,
-        "message": f"Successfully recorded override for requirement {group_id}."
+        "message": f"Successfully recorded persistent override for requirement {group_id}."
+    }
+
+@app.post("/api/approve")
+async def approve_requirement(
+    group_id: str = Form(...),
+    buyer_name: str = Form("Aditya Kumar")
+):
+    """
+    Task Brief Section 3.6: Approve creates the PO or RFQ/RFP.
+    Records who approved and when with full audit compliance.
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    storage_manager.save_approval(group_id, buyer_name=buyer_name, timestamp=timestamp)
+    return {
+        "status": "success",
+        "group_id": group_id,
+        "buyer_name": buyer_name,
+        "timestamp": timestamp,
+        "message": f"Requirement {group_id} approved. PO or Sourcing Request created."
     }
 
 # --- Fallback Catch-all SPA Handler for Direct URL Reloads ---

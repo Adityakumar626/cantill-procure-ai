@@ -18,12 +18,16 @@ from app.engine.data_loader import MasterDataLoader, parse_datetime, parse_date
 from app.engine.pipeline import ProcurementPipeline
 from app.policy_manager.store import PolicyStore
 from app.models.procurement import PRLine
+from app.models.policy import ProcurementPolicy, PolicyRule, synchronize_policy_amendment
 
 def run():
     parser = argparse.ArgumentParser(description="Cantill ProcureAI Batch Runner")
     parser.add_argument("--input", "-i", required=True, help="Path to input PR batch CSV")
     parser.add_argument("--output", "-o", required=True, help="Path to destination output CSV")
-    parser.add_argument("--policy", "-p", default="v5.0", help="Policy version to run (default: v5.0)")
+    parser.add_argument("--policy", "-p", default="v5.0", help="Policy version (e.g. v5.0, v5.1) or path to policy JSON file")
+    parser.add_argument("--spot-limit", type=float, default=None, help="Optional override for spot PO limit")
+    parser.add_argument("--emergency-limit", type=float, default=None, help="Optional override for emergency PO limit")
+    parser.add_argument("--rfq-limit", type=float, default=None, help="Optional override for RFQ threshold")
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -38,12 +42,38 @@ def run():
     loader.load_all()
 
     policy_store = PolicyStore()
-    if args.policy not in policy_store.policies:
-        print(f"Notice: Policy {args.policy} not found in store; using default active {policy_store.active_version}.")
-    else:
+    
+    # 1. Check if --policy is a path to a JSON policy file
+    candidate_file = Path(args.policy)
+    if candidate_file.exists() and candidate_file.suffix.lower() == ".json":
+        active_policy = policy_store.load_policy_from_file(candidate_file)
+        policy_store.activate_version(active_policy.version)
+    elif args.policy in policy_store.policies:
         policy_store.activate_version(args.policy)
+        active_policy = policy_store.get_active_policy()
+    else:
+        # Check if version exists in app/storage/policies/{args.policy}.json
+        disk_policy_path = policy_store.storage_dir / f"{args.policy}.json"
+        if disk_policy_path.exists():
+            active_policy = policy_store.load_policy_from_file(disk_policy_path)
+            policy_store.activate_version(active_policy.version)
+        else:
+            print(f"Error: Requested policy '{args.policy}' not found in store or at {disk_policy_path}.", file=sys.stderr)
+            print(f"Available policy versions: {list(policy_store.policies.keys())}", file=sys.stderr)
+            sys.exit(1)
 
-    active_policy = policy_store.get_active_policy()
+    # 2. Apply any CLI threshold overrides if explicitly passed
+    if args.spot_limit is not None or args.emergency_limit is not None or args.rfq_limit is not None:
+        active_policy = synchronize_policy_amendment(
+            base_policy=active_policy,
+            version=args.policy,
+            spot_po_limit=args.spot_limit,
+            emergency_po_limit=args.emergency_limit,
+            rfq_limit=args.rfq_limit,
+        )
+        policy_store.register_policy(active_policy)
+        policy_store.activate_version(active_policy.version)
+
     print(f"✔ Active Policy: {active_policy.version} (effective {active_policy.effective_date})")
 
     pipeline = ProcurementPipeline(loader, active_policy)

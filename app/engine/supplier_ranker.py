@@ -14,12 +14,20 @@ class SupplierRanker:
         po_history: List[POHistoryRecord],
         contracts: Dict[str, Contract],
         history_window_days: int = 548,
+        ranking_weights: Optional[Dict[str, float]] = None,
     ):
         self.suppliers = suppliers
         self.items = items
         self.po_history = po_history
         self.contracts = contracts
         self.history_window_days = history_window_days
+        self.ranking_weights = ranking_weights or {
+            "recency": 40.0,
+            "contract": 15.0,
+            "volume": 5.0,
+            "otd": 10.0,
+            "quality": 10.0
+        }
 
     def get_preferred_suppliers_ranked(
         self,
@@ -88,13 +96,14 @@ class SupplierRanker:
             else:
                 recency = 0.0
 
-            # Composite Score: Recency (40%), Contract (15%), Volume (25%), OTD (10%), Quality (10%)
+            # Composite Score driven by configurable ranking_weights policy
+            w = self.ranking_weights
             score = (
-                recency * 40.0 +
-                (15.0 if data["has_contract"] else 0.0) +
-                min(data["pos"], 10) * 5.0 +
-                (supp.on_time_pct / 100.0) * 10.0 +
-                (supp.quality_rating / 5.0) * 10.0
+                recency * w.get("recency", 40.0) +
+                (w.get("contract", 15.0) if data["has_contract"] else 0.0) +
+                min(data["pos"], 10) * w.get("volume", 5.0) +
+                (supp.on_time_pct / 100.0) * w.get("otd", 10.0) +
+                (supp.quality_rating / 5.0) * w.get("quality", 10.0)
             )
 
             ranked.append({
@@ -109,8 +118,8 @@ class SupplierRanker:
                 "score": score,
             })
 
-        # Rank descending by score
-        ranked.sort(key=lambda x: (x["score"], x["pos_548d"], x["recency"]), reverse=True)
+        # Deterministic ranking: score desc, pos_548d desc, recency desc, supplier_id asc
+        ranked.sort(key=lambda x: (-x["score"], -x["pos_548d"], -x["recency"], x["supplier_id"]))
         return ranked
 
     def get_sourcing_suggestions(

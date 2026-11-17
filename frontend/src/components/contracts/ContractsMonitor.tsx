@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ContractInfo } from '../../types/procurement';
-import { FileText, Plus, X } from 'lucide-react';
+import { FileText, Plus, X, Upload } from 'lucide-react';
 
 interface ContractsMonitorProps {
   onShowToast: (type: 'success' | 'error' | 'info', title: string, message: string) => void;
@@ -36,17 +36,55 @@ export const ContractsMonitor: React.FC<ContractsMonitorProps> = ({ onShowToast 
     return '₹' + val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
-  const handleRegisterContract = (e: React.FormEvent) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleRegisterContract = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newId || !newSupplier || !newCap) {
       alert('Please fill all required fields');
       return;
     }
-    onShowToast('success', 'Contract Registered', `Contract ${newId} registered and activated into ceiling engine.`);
-    setIsModalOpen(false);
-    setNewId('');
-    setNewSupplier('');
-    setNewCap('');
+    try {
+      const formData = new FormData();
+      formData.append('contract_id', newId);
+      formData.append('supplier_id', newSupplier);
+      formData.append('value_cap', newCap);
+      const res = await fetch('/api/contracts/manual', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      onShowToast('success', 'Contract Registered', data.message || `Contract ${newId} registered and activated into ceiling engine.`);
+      setIsModalOpen(false);
+      setNewId('');
+      setNewSupplier('');
+      setNewCap('');
+      fetchContracts();
+    } catch (err) {
+      onShowToast('error', 'Registration Failed', 'Could not register contract.');
+    }
+  };
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/contracts/upload-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        onShowToast('success', 'PDF Contract Ingested', data.message || `Contract ${data.contract_id} uploaded.`);
+        fetchContracts();
+      } else {
+        onShowToast('error', 'Upload Failed', data.detail || 'Could not parse PDF contract.');
+      }
+    } catch (err) {
+      onShowToast('error', 'Upload Error', 'Failed to upload PDF contract.');
+    }
   };
 
   return (
@@ -60,6 +98,20 @@ export const ContractsMonitor: React.FC<ContractsMonitorProps> = ({ onShowToast 
         </div>
 
         <div className="flex items-center gap-2.5">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handlePdfUpload}
+            accept=".pdf"
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-1.5 h-8 px-3 text-xs font-medium text-[#202B38] bg-white hover:bg-[#F5F6F8] border border-[#CAD0D8] rounded-[4px] transition-colors shadow-2xs"
+          >
+            <Upload className="w-3.5 h-3.5 text-[#687586]" />
+            <span>Upload Signed PDF</span>
+          </button>
           <button
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-1.5 h-8 px-3 text-xs font-semibold text-white bg-[#315FCE] hover:bg-[#254DB0] rounded-[4px] transition-colors shadow-2xs"

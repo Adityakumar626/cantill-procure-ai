@@ -132,3 +132,63 @@ def test_spa_page_routes_and_reload_persistence():
         assert res.status_code == 200
         assert "html" in res.headers.get("content-type", "").lower()
         assert "<div id=\"root\">" in res.text or "html" in res.text.lower()
+
+def test_chat_confirm_and_intake_persistence():
+    """Verify that confirming a chat PR persists it and routes it into the Buyer Workspace."""
+    res = client.post("/api/chat/confirm", data={
+        "description": "Nitrile coated gloves for Chakan line 1",
+        "quantity": "500",
+        "uom": "NOS",
+        "plant": "CHK1",
+        "need_by_date": "2026-11-20",
+        "urgency": "Normal",
+        "item_code": "ITM-1048",
+        "requester": "Aditya Kumar",
+        "department": "Safety & Operations"
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "success"
+    assert "PR-26-CHAT" in data["pr_no"]
+
+    # Re-run batch and assert chat PR is ingested and clubbed/evaluated
+    res_batch = client.post("/api/process-batch")
+    assert res_batch.status_code == 200
+    batch_data = res_batch.json()
+    assert batch_data["summary"]["total_pr_lines"] == 187  # 186 base + 1 chat PR
+
+def test_buyer_approve_endpoint():
+    """Verify buyer approval workflow per Section 3.6."""
+    res_app = client.post("/api/approve", data={
+        "group_id": "REQ-0001",
+        "buyer_name": "Aditya Kumar"
+    })
+    assert res_app.status_code == 200
+    app_data = res_app.json()
+    assert app_data["status"] == "success"
+    assert app_data["group_id"] == "REQ-0001"
+
+    # Re-process batch and check approval status
+    res_batch = client.post("/api/process-batch")
+    batch_data = res_batch.json()
+    req1 = next(r for r in batch_data["requirements"] if r["group_id"] == "REQ-0001")
+    assert req1["is_approved"] is True
+    assert req1["approved_by"] == "Aditya Kumar"
+
+def test_manual_contract_registration():
+    """Verify manual contract registration into live ceiling engine."""
+    res = client.post("/api/contracts/manual", data={
+        "contract_id": "RC-MANUAL-001",
+        "supplier_id": "S001",
+        "start_date": "2026-11-01",
+        "end_date": "2027-10-31",
+        "value_cap": "500000"
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "success"
+
+    # Verify contract appears in /api/contracts
+    res_list = client.get("/api/contracts")
+    contracts = res_list.json()["contracts"]
+    assert any(c["contract_id"] == "RC-MANUAL-001" for c in contracts)
