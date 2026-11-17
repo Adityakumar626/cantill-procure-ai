@@ -34,29 +34,29 @@
 ```mermaid
 flowchart TD
     subgraph Intake ["1. INTAKE LAYER"]
-        A1[Conversational Chat Intake] --> B[PR Normalization]
-        A2[Batch CSV Ingestion] --> B
+        A1["Conversational Chat Intake"] --> B["PR Normalization"]
+        A2["Batch CSV Ingestion"] --> B
     end
 
     subgraph Pipeline ["2. 6-STAGE POLICY PIPELINE"]
-        B --> C[Stage 1: Clause 1 Item Matcher<br/>Code Lookup + Abbr/Fuzzy Fallback]
-        C --> D[Stage 2: Clause 2 Anti-Split Clubber<br/>14d Window / 7d Need-By Earliest Date]
-        D --> E[Stage 3: Clause 4 Contract Applicability<br/>Ceiling Check & Rate Selection]
-        E --> F[Stage 4: Clause 3 Requirement Valuation<br/>Contract Rate > 365d PO > Std Price]
-        F --> G[Stage 5: Clause 5 & 6 Policy Routing<br/>Supplier Ranker & Sourcing Top-Up]
-        G --> H[Stage 6: Clause 7 PO Consolidator<br/>Same Supplier + Plant + 24h Window]
+        B --> C["Stage 1: Clause 1 Item Matcher<br/>Code Lookup + Abbr/Fuzzy Fallback"]
+        C --> D["Stage 2: Clause 2 Anti-Split Clubber<br/>14d Window / 7d Need-By Earliest Date"]
+        D --> E["Stage 3: Clause 4 Contract Applicability<br/>Ceiling Check & Rate Selection"]
+        E --> F["Stage 4: Clause 3 Requirement Valuation<br/>Contract Rate &gt; 365d PO &gt; Std Price"]
+        F --> G["Stage 5: Clause 5 & 6 Policy Routing<br/>Supplier Ranker & Sourcing Top-Up"]
+        G --> H["Stage 6: Clause 7 PO Consolidator<br/>Same Supplier + Plant + 24h Window"]
     end
 
     subgraph Output ["3. BUYER WORKSPACE & EXPORTS"]
-        H --> I1[13-Column Decision CSV Export]
-        H --> I2[Preferred Supplier Ranking CSV]
-        H --> I3[Interactive Buyer Decision Workspace]
-        H --> I4[Audit Log & Override Management]
+        H --> I1["13-Column Decision CSV Export"]
+        H --> I2["Preferred Supplier Ranking CSV"]
+        H --> I3["Interactive Buyer Decision Workspace"]
+        H --> I4["Audit Log & Override Management"]
     end
 
     subgraph PolicyData ["POLICY AS DATA STORE"]
-        P[ProcurementPolicy JSON / Object]<br/>v5.0 Active --> G
-        P_Diff[Natural Language Diff Generator] --> P
+        P["ProcurementPolicy JSON / Object<br/>v5.0 Active"] --> G
+        P_Diff["Natural Language Diff Generator"] --> P
     end
 ```
 
